@@ -9,7 +9,7 @@ function attachDemoMetadata(events) {
     event.demo = true;
     event.articles.forEach((article, index) => {
       article.demo = true;
-      const demoResult = AnalysisMethod.analyzeLocal(article.s.map(row => row[1]).join(' '));
+      const demoResult = AnalysisMethod.analyzeLocal(article.s.map(row => row[1]).join(' '), article.head.replace(/\[\/?[eo]\]/g, ''));
       Object.assign(article, { analysisVersion: 2, rows: demoResult.rows, sample: demoResult.sample, summary: demoResult.summary, s: demoResult.s });
       article.sourceMetadata = {
         title: article.head.replace(/\[\/?[eo]\]/g, ''), author: authors[index % authors.length],

@@ -4,6 +4,8 @@ function analysisView(article) {
   const rows = analysisRows(article), summary = AnalysisMethod.summarize(rows), sample = article.sample;
   const title = article.rows?.find(row => row.kind === 'title');
   return {
+    hasClickableTitle: Boolean(title), untitledAnalysis: article.analysisVersion===2&&!title,
+    head: title ? [{text:title.text,css:title.emotion>0?NEWS_MARK.emotion:title.opinion?NEWS_MARK.opinion:''}] : newsHead(article),
     intensitySteps: [1,2,3].map(level=>({active:summary.peak>=level?'true':'false',color:summary.peak>=level?['#F2C94C','#FFAA7A','#FF7A66'][level-1]:'rgba(255,255,255,.12)'})),
     detailedAnalysis: article.analysisVersion === 2, legacyResult: article.analysisVersion !== 2,
     peakColor: ['#CFE6EC','#F5D874','#FFAA7A','#FFB0A4'][summary.peak],
@@ -56,17 +58,26 @@ function highlightedEvidence(text, cue, row, kind) {
   const classes = 'evidence-cue' + ((row ? row.opinion : kind === 'opinion') ? ' cue-opinion' : '') + ((row ? row.emotion > 0 : kind === 'emotion') ? ' cue-emotion' : '');
   return esc(text.slice(0, position)) + '<mark class="'+classes+'">'+esc(cue)+'</mark>'+esc(text.slice(position+cue.length));
 }
-function openSentenceExplanation(article, index) {
+function openSentenceExplanation(article, index, {isTitle=false}={}) {
   const row = sentenceAssessment(article, index), kind = article.s[index]?.[0];
   const fallback = { title: kind === 'emotion' ? 'Język emocjonalny' : kind === 'opinion' ? 'Opinia' : 'Twierdzenie sprawdzalne', body: 'To przybliżona klasyfikacja języka, nie weryfikacja prawdziwości informacji.' };
   const explanation = assessmentExplanation(article, index, fallback);
   const text = article.s[index]?.[1] || '', cue = row?.cue && text.includes(row.cue) ? row.cue : '';
   const color = (row ? row.emotion > 0 : kind === 'emotion') ? '#FF7A66' : (row ? row.opinion : kind === 'opinion') ? '#F2C94C' : '#A9CBD4';
-  openModal('<h2 id="fragment-explanation-title" style="margin-top:14px">Dlaczego to oznaczenie?</h2>' +
+  openModal('<h2 id="fragment-explanation-title" style="margin-top:14px">'+(isTitle?'Dlaczego tak oceniono nagłówek?':'Dlaczego to oznaczenie?')+'</h2>' +
+    (isTitle?'<p>Nagłówek oceniamy osobno. Jego wynik nie jest wliczany do statystyk treści artykułu.</p>':'') +
     '<div class="explanation-badges">' + explanationBadges(row,kind) + '</div>' +
     '<blockquote class="explanation-quote" style="border-left-color:'+color+'">' + highlightedEvidence(text,cue,row,kind) + '</blockquote>' +
     (cue ? '<p class="evidence-label"><strong>Wskazane słowa:</strong> '+highlightedEvidence(cue,cue,row,kind)+'</p>' : '<p class="evidence-label">Nie wskazano osobnego słowa-klucza. Oznaczenie dotyczy całego fragmentu i jego kontekstu.</p>') +
     '<p id="mark-tip-body">' + esc(explanation.body) + '</p>' +
     '<p style="font-size:12px;color:#A9CBD4">' + (article.demo ? 'Przykład demonstracyjny.' : article.ai ? 'Ocena AI może być błędna.' : 'To wynik reguł lokalnych, nie ocena modelu AI.') + '</p>' +
     '<button type="button" data-close style="'+MB+';width:100%;border:0;background:#5EE6D6;color:#04202B">Zamknij</button>', card => card.setAttribute('aria-labelledby', 'fragment-explanation-title'));
+}
+
+function openTitleExplanation(article) {
+  const title = article.rows?.find(row => row.kind === 'title');
+  if (!title) return;
+  const kind = title.emotion ? 'emotion' : title.opinion ? 'opinion' : 'fact';
+  // Reuse only the explanation renderer; keep the original article and summary untouched.
+  openSentenceExplanation({ ...article, rows: [{ ...title, kind: 'body' }], s: [[kind, title.text]] }, 0, { isTitle: true });
 }
