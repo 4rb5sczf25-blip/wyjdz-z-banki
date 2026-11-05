@@ -157,6 +157,7 @@ section[aria-live],#stage button[onclick]{animation:pop .28s ease both}
 <div class="sd-card"><strong>Skróty</strong><br><kbd>Esc</kbd> zamyka okna i samouczek<br><kbd>Tab</kbd> przechodzi między elementami</div>
 </aside>
 
+<script src="/auth-return.js"></script>
 <script src="/article-flow.js"></script>
 <script>
 /* App version: bump this on every release (shown on the splash, in Settings and in the desktop side panel) */
@@ -665,30 +666,30 @@ function openAccount(){
       q('#acOut').onclick=()=>{sbStore(null);try{localStorage.removeItem('wzb-lastsync')}catch(_){}close();try{render(current)}catch(_){}showToast('Wylogowano. Dane zostają na tym urządzeniu.')};
     };
     const drawEmail=()=>{
-      body.innerHTML='<h2 style="margin-top:14px">Zaloguj się</h2><p>Zapisz postępy i miej je na każdym urządzeniu. Wyślemy Ci jednorazowy kod na e-mail, bez hasła. Jeśli nie masz konta, utworzymy je automatycznie.</p>'+
+      body.innerHTML='<h2 style="margin-top:14px">Zaloguj się</h2><p>Zapisz postępy i miej je na każdym urządzeniu. Wyślemy Ci wiadomość z linkiem do logowania lub jednorazowym kodem, bez hasła. Jeśli nie masz konta, utworzymy je automatycznie.</p>'+
        '<label for="acEmail" style="display:block;margin-top:12px;font-weight:800;font-size:15px">Adres e-mail</label><input id="acEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="np. ania@example.com" value="'+esc(email)+'" style="'+inp+'">'+
        '<div id="acMsg" role="status" style="min-height:18px;margin-top:6px;font-size:13px;font-weight:700;color:#FFB0A4"></div>'+
-       '<div style="display:flex;gap:10px;margin-top:10px"><button type="button" data-x style="'+MB+';flex:1;'+sec+'">Nie teraz</button><button type="button" id="acSend" style="'+MB+';flex:2;'+pri+'">Wyślij kod</button></div>'+
+       '<div style="display:flex;gap:10px;margin-top:10px"><button type="button" data-x style="'+MB+';flex:1;'+sec+'">Nie teraz</button><button type="button" id="acSend" style="'+MB+';flex:2;'+pri+'">Wyślij wiadomość</button></div>'+
        '<p style="font-size:12px;line-height:17px;color:#A9CBD4">Zapisujemy Twój e-mail oraz postępy w aplikacji. Konto możesz usunąć, pisząc na support@wyjdzzbanki.pl.</p>';
       q('[data-x]').onclick=close;
       const send=async()=>{
         email=q('#acEmail').value.trim().toLowerCase();
         if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){msg('Podaj poprawny adres e-mail.');return}
         const b=q('#acSend');b.disabled=true;b.textContent='Wysyłam...';
-        try{await sbReq('/auth/v1/otp',{method:'POST',body:{email:email,create_user:true}});lastSent=Date.now();drawCode()}
-        catch(e){b.disabled=false;b.textContent='Wyślij kod';msg(sbErr(e))}
+        try{await sbReq(sbOtpPath(),{method:'POST',body:{email:email,create_user:true}});lastSent=Date.now();drawCode()}
+        catch(e){b.disabled=false;b.textContent='Wyślij wiadomość';msg(sbErr(e))}
       };
       q('#acSend').onclick=send;q('#acEmail').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();send()}};
     };
     const drawCode=()=>{
-      body.innerHTML='<h2 style="margin-top:14px">Wpisz kod</h2><p>Wysłaliśmy kod na <b>'+esc(email)+'</b>. Sprawdź skrzynkę (także spam) i wpisz go poniżej.</p>'+
-       '<label for="acCode" style="display:block;margin-top:12px;font-weight:800;font-size:15px">Kod z e-maila</label><input id="acCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="000000" style="'+inp+';letter-spacing:4px;font-size:20px;text-align:center">'+
+      body.innerHTML='<h2 style="margin-top:14px">Sprawdź e-mail</h2><p>Wysłaliśmy wiadomość na <b>'+esc(email)+'</b>. Sprawdź skrzynkę (także spam). Jeśli wiadomość zawiera link, otwórz go, aby się zalogować. Jeśli zawiera kod, wpisz go poniżej. Link otwiera aplikację w nowej karcie — kontynuuj w niej.</p>'+
+       '<label for="acCode" style="display:block;margin-top:12px;font-weight:800;font-size:15px">Kod z e-maila (jeśli jest w wiadomości)</label><input id="acCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="000000" style="'+inp+';letter-spacing:4px;font-size:20px;text-align:center">'+
        '<div id="acMsg" role="status" style="min-height:18px;margin-top:6px;font-size:13px;font-weight:700;color:#FFB0A4"></div>'+
        '<div style="display:flex;gap:10px;margin-top:10px"><button type="button" id="acBack" style="'+MB+';flex:1;'+sec+'">Zmień e-mail</button><button type="button" id="acOk" style="'+MB+';flex:2;'+pri+'">Zaloguj się</button></div>'+
-       '<button type="button" id="acAgain" style="'+MB+';width:100%;margin-top:10px;height:44px;font-size:14px;'+sec+'">Wyślij kod ponownie</button>';
+       '<button type="button" id="acAgain" style="'+MB+';width:100%;margin-top:10px;height:44px;font-size:14px;'+sec+'">Wyślij wiadomość ponownie</button>';
       q('#acBack').onclick=drawEmail;
       q('#acAgain').onclick=async()=>{if(Date.now()-lastSent<30000){msg('Poczekaj chwilę przed ponownym wysłaniem.');return}
-        try{await sbReq('/auth/v1/otp',{method:'POST',body:{email:email,create_user:true}});lastSent=Date.now();msg('');showToast('Wysłano nowy kod.')}catch(e){msg(sbErr(e))}};
+        try{await sbReq(sbOtpPath(),{method:'POST',body:{email:email,create_user:true}});lastSent=Date.now();msg('');showToast('Wysłano nową wiadomość.')}catch(e){msg(sbErr(e))}};
       const go=async()=>{
         const code=q('#acCode').value.replace(/\s/g,'');
         if(code.length<6){msg('Wpisz cały kod z e-maila.');return}
@@ -859,6 +860,7 @@ addEventListener('resize',fit);window.visualViewport&&visualViewport.addEventLis
 document.addEventListener('click',e=>{const a=e.target.closest('a[href]');if(!a)return;const m=a.getAttribute('href').match(/^([A-Za-z]+)\.dc\.html$/);if(!m)return;e.preventDefault();const back=/^(Wróć|Zamknij)/.test(a.getAttribute('aria-label')||'');dir=back?-1:1;navMode=a.closest('nav.tabbar')?'tab':(back?'back':'push');if(location.hash!=='#'+m[1])location.hash=m[1];else show(m[1])});
 addEventListener('hashchange',()=>show(location.hash.slice(1)));
 show(location.hash.slice(1)||(PREFS.splash?'Splash':'Main'));
+finishAuthReturn();
 </script>
 <script>
 /* "Zanurz się" — dive transition from Splash to Main */

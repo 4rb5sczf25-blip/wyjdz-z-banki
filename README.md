@@ -55,3 +55,9 @@ npm run test:browser
 Node.js 24. `npm test` uruchamia testy serwera, SSRF, ekstrakcji, atrap AI oraz migracji SQL w lokalnym PostgreSQL WASM (PGlite), bez konta i bez połączenia do produkcyjnej bazy. Testy przeglądarkowe wymagają Chromium (`CHROMIUM_BIN` pozwala podać ścieżkę); uruchamiają lokalny serwer z atrapami API i blokują połączenia do Supabase oraz Google Fonts. Testy nie wykonują prawdziwych wywołań OpenAI ani nie zapisują danych w Supabase. Testy PGlite sprawdzają logikę SQL i uprawnienia, ale nie zastępują testu obciążenia wielu rzeczywistych połączeń do wdrożonego Supabase.
 
 Do pracy z prawdziwymi lokalnymi funkcjami Vercel użyj Vercel CLI (`vercel dev`) i wartości z `.env.example` zapisanych bezpiecznie w lokalnym, ignorowanym pliku `.env.local`. CLI nie jest wymagane do testów. Zwykły serwer statyczny (`python3 -m http.server 3000`) pozwala oglądać frontend i analizować lokalnie własny tekst, lecz nie wykonuje funkcji `api/`.
+
+## Logowanie linkiem z e-maila
+
+Aplikacja obsługuje standardowy link Supabase (`{{ .ConfirmationURL }}`) oraz kod jednorazowy, jeśli szablon go zawiera. Nie trzeba zmieniać szablonu wiadomości. Po kliknięciu linku aplikacja usuwa tokeny z adresu, potwierdza konto przez Supabase i zapisuje sesję. Kontynuuj pracę w karcie otwartej przez link.
+
+W Supabase → Authentication → URL Configuration ustaw **Site URL** na adres aplikacji, a w **Redirect URLs** dodaj dokładny adres używanego wdrożenia Vercel z końcowym `/#Main` (np. `https://twoja-wersja.vercel.app/#Main`). Dla kolejnego adresu Preview trzeba dodać jego adres. Aplikacja wysyła `redirect_to` wskazujący aktualne wdrożenie. Jeżeli adres nie jest dozwolony, Supabase może wrócić do Site URL, gdzie również musi być wdrożona obsługa linków. Stare lub już użyte linki mogą wygasnąć; po zmianie ustawień poproś o nową wiadomość. Nie udostępniaj linków logowania, bo zawierają jednorazowe dane dostępu.

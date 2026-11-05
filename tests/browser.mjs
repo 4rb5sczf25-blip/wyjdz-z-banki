@@ -25,7 +25,7 @@ const server = http.createServer(async (req, res) => {
         : { s: [['fact', body.text.slice(0, 100)]], head: 'Wynik testowy', pct: 3, ai: true }));
       return;
     }
-    const files = { '/': 'index.html', '/article-flow.js': 'article-flow.js', '/logo.jpg': 'logo.jpg', '/favicon.png': 'favicon.png', '/manifest.webmanifest': 'manifest.webmanifest' };
+    const files = { '/': 'index.html', '/article-flow.js': 'article-flow.js', '/auth-return.js': 'auth-return.js', '/logo.jpg': 'logo.jpg', '/favicon.png': 'favicon.png', '/manifest.webmanifest': 'manifest.webmanifest' };
     const file = files[req.url];
     if (!file) { res.statusCode = 404; res.end(); return; }
     res.setHeader('Content-Type', file.endsWith('.js') ? 'text/javascript' : file.endsWith('.html') ? 'text/html; charset=utf-8' : file.endsWith('.jpg') ? 'image/jpeg' : 'application/octet-stream');
