@@ -1,6 +1,6 @@
 # Poprawki po zgłoszeniu z Beta 0.81
 
-Gałąź `fix/welcome-and-composer`. Bez zmian modeli, limitów, bazy i kluczy. Nie opublikowano na produkcji.
+Gałąź `fix/welcome-and-composer`. Bez zmian modeli, limitów, bazy i kluczy. Operator zatwierdził publikację przez `main` jako **Beta 0.82**. Status zakończenia wdrożenia należy sprawdzić w Vercel.
 
 1. **Pisanie w polu:** usunięto nakładające się obrysy. Wspólna ramka i subtelna poświata otaczają pole na telefonie i komputerze. Wielowierszowy tekst przewija się pionowo. Na telefonie pole ma 112–168 px wysokości; na komputerze dopasowuje się do panelu. Wyróżnienie AI i dwa delikatne rozświetlenia są dostępne także na telefonie. Fokus, pisanie i ograniczenie ruchu wyłączają rozświetlenia.
 2. **Ekran powitalny i wejście:** nowa, ograniczona szerokością kompozycja z wyraźnymi przyciskami i oznaczonym przykładem edukacyjnym. Na komputerze menu boczne nie konkuruje z powitaniem. Wejście wygasza rzeczywistą treść przez 260 ms, po czym odsłania przegląd. Nie wyświetla nieprzezroczystego ekranu z pierścieniem.
