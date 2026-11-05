@@ -33,7 +33,7 @@ const server = http.createServer(async (req, res) => {
         : { s: [['fact', body.text.slice(0, 100)]], head: 'Wynik testowy', pct: 3, ai: true }));
       return;
     }
-    const files = { '/': 'index.html', '/article-flow.js': 'article-flow.js', '/auth-return.js': 'auth-return.js', '/guest-session.js': 'guest-session.js', '/quota-view.js': 'quota-view.js', '/logo.jpg': 'logo.jpg', '/favicon.png': 'favicon.png', '/manifest.webmanifest': 'manifest.webmanifest' };
+    const files = { '/': 'index.html', '/article-flow.js': 'article-flow.js', '/auth-return.js': 'auth-return.js', '/guest-session.js': 'guest-session.js', '/quota-view.js': 'quota-view.js', '/profile.js': 'profile.js', '/privacy-config.js': 'privacy-config.js', '/privacy.js': 'privacy.js', '/logo.jpg': 'logo.jpg', '/favicon.png': 'favicon.png', '/manifest.webmanifest': 'manifest.webmanifest' };
     const file = files[req.url];
     if (!file) { res.statusCode = 404; res.end(); return; }
     res.setHeader('Content-Type', file.endsWith('.js') ? 'text/javascript' : file.endsWith('.html') ? 'text/html; charset=utf-8' : file.endsWith('.jpg') ? 'image/jpeg' : 'application/octet-stream');
@@ -74,7 +74,10 @@ try {
   };
   await command('Runtime.enable'); await command('Page.enable'); await command('Network.enable');
   await command('Network.setBlockedURLs', { urls: ['*fonts.googleapis.com*', '*fonts.gstatic.com*', '*supabase.co*'] });
-  await command('Page.addScriptToEvaluateOnNewDocument', { source: `const originalFetch=window.fetch.bind(window);window.guestSignups=0;window.fetch=async(input,options)=>{if(String(input).includes('.supabase.co/auth/v1/signup')){window.guestSignups++;return new Response(JSON.stringify({access_token:'guest.jwt.token',refresh_token:'guest-refresh',expires_in:3600,user:{id:'guest-user',is_anonymous:true}}),{status:200,headers:{'Content-Type':'application/json'}})}return originalFetch(input,options)};localStorage.setItem('wzb-onboard','1');localStorage.setItem('wzb-prefs',JSON.stringify({motion:false,sound:false,splash:false}));` });
+  await command('Page.addScriptToEvaluateOnNewDocument', { source: `const originalFetch=window.fetch.bind(window);window.guestSignups=0;window.profileRequests=[];window.fetch=async(input,options)=>{
+if(String(input).includes('.supabase.co/auth/v1/user')&&options?.method==='PUT'){const body=JSON.parse(options.body);window.profileRequests.push(body);return new Response(JSON.stringify({id:'test-user',email:'test@example.com',user_metadata:body.data}),{status:200,headers:{'Content-Type':'application/json'}})}
+if(String(input).includes('.supabase.co/auth/v1/otp')){window.profileRequests.push(JSON.parse(options.body));return new Response('{}',{status:200,headers:{'Content-Type':'application/json'}})}
+if(String(input).includes('.supabase.co/auth/v1/signup')){window.guestSignups++;return new Response(JSON.stringify({access_token:'guest.jwt.token',refresh_token:'guest-refresh',expires_in:3600,user:{id:'guest-user',is_anonymous:true}}),{status:200,headers:{'Content-Type':'application/json'}})}return originalFetch(input,options)};localStorage.setItem('wzb-onboard','1');localStorage.setItem('wzb-prefs',JSON.stringify({motion:false,sound:false,splash:false}));` });
   const main = async () => {
     await evaluate(`document.querySelectorAll('.ob-back').forEach(e=>e.remove());location.hash='Main';show('Main');PREFS.motion=false;PREFS.sound=false;localStorage.setItem('wzb-session',JSON.stringify({at:'test.jwt.token',rt:'test',uid:'test-user',exp:Date.now()+3600000}));`);
     await waitFor(`Boolean(document.getElementById('link'))`);
@@ -150,8 +153,26 @@ try {
   assert.equal(await evaluate(`window.guestSignups`), 1);
   await evaluate(`location.hash='Main';show('Main')`); await waitFor(`document.getElementById('analysis-quota').textContent.includes('0 z 2')`);
   console.log('PASS guest session reused; preview free; two AI analyses then local fallback');
+  await main();
+  await evaluate(`document.getElementById('main-account').click()`);
+  await evaluate(`document.getElementById('acProfileName').value='Tester';document.getElementById('acSaveName').click()`);
+  await waitFor(`sbSession().displayName==='Tester'`);
+  assert.equal(await evaluate(`document.getElementById('acProfileName').value`),'Tester');
+  await evaluate(`document.getElementById('acProfileName').value='';document.getElementById('acSaveName').click()`);
+  await waitFor(`sbSession().displayName===''`);
+  await evaluate(`document.querySelector('#acBody [data-x]').click();sbStore(null);openAccount()`);
+  await evaluate(`document.getElementById('acPrivacy').click()`);
+  assert.match(await evaluate(`document.querySelector('[aria-labelledby="privacy-title"]').innerText`),/Fundacja Prześwit/);
+  assert.match(await evaluate(`document.querySelector('[aria-labelledby="privacy-title"]').innerText`),/prywatnosc@wyjdzzbanki.pl/);
+  assert.match(await evaluate(`document.querySelector('[aria-labelledby="privacy-title"]').innerText`),/Wersja robocza/);
+  await evaluate(`document.querySelector('[aria-labelledby="privacy-title"] [data-close]').click();document.getElementById('acEmail').value='new@example.com';document.getElementById('acNick').value='Nowy nick';document.getElementById('acSend').click()`);
+  await waitFor(`Boolean(document.getElementById('acCode'))`);
+  assert.equal(await evaluate(`window.profileRequests.at(-1).data.display_name`),'Nowy nick');
+  await evaluate(`document.querySelectorAll('.ob-back').forEach(e=>e.remove());location.hash='Settings';show('Settings');document.getElementById('settings-privacy').click()`);
+  assert.equal(await evaluate(`Boolean(document.getElementById('privacy-title'))`),true);
+  console.log('PASS optional nickname saves/clears; signup metadata; privacy available before signup and in settings');
   assert.equal(exceptions.length, 0, JSON.stringify(exceptions));
-  console.log('11 browser scenarios passed; no real OpenAI or Supabase requests.');
+  console.log('12 browser scenarios passed; no real OpenAI or Supabase requests.');
 } finally {
   socket?.close(); browser.kill('SIGTERM');
   await new Promise(resolve => { if (browser.exitCode !== null) resolve(); else browser.once('exit', resolve); });

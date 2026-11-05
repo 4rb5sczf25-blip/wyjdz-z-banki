@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 const source = await readFile(new URL('../auth-return.js', import.meta.url), 'utf8');
 function page(hash, { rejected = false } = {}) {
   const saved = [], notices = [], requests = [], history = [];
-  const ctx = vm.createContext({ URLSearchParams, location: { hash, origin: 'https://preview.example.com', pathname: '/', search: '' }, history: { replaceState: (_a, _b, url) => history.push(url) },
+  const ctx = vm.createContext({ profileName: value => typeof value === 'string' ? value.slice(0,40) : '', URLSearchParams, location: { hash, origin: 'https://preview.example.com', pathname: '/', search: '' }, history: { replaceState: (_a, _b, url) => history.push(url) },
     showToast: text => notices.push(text), sbStore: s => saved.push(s), syncNow: async () => {}, current: 'Main', render: () => {},
     sbReq: async (path, options) => { requests.push({ path, options }); if (rejected) throw new Error('expired'); return { id: 'verified-user', email: 'test@example.com', email_confirmed_at: '2026-01-01' }; }
   });

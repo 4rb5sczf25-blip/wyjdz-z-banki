@@ -74,3 +74,9 @@ Ekran główny odczytuje pozostałe analizy z serwera (`GET /api/quota`), bez zu
 Wynik własnego tekstu ma etykietę „Analiza AI” lub „Analiza lokalna”. Przykłady są oznaczone „Materiał przykładowy”. Obok wyniku wyjaśniamy, że klasyfikacja może się mylić, a kategoria „fakt” nie jest weryfikacją prawdziwości.
 
 Jeśli licznik zgłasza `quota_read_denied`, wykonaj `supabase/migrations/202611050003_quota_read_permission.sql` w SQL Editor. Skrypt jawnie nadaje `SELECT` wyłącznie roli `service_role`, używanej przez serwer. Nie dodaje dostępu do tabeli gościom ani użytkownikom i nie wyłącza RLS. W nowych instalacjach wykonaj wszystkie trzy migracje w kolejności.
+
+## Nick i prywatność
+
+Opcjonalny nick/imię (do 40 znaków) podaje się przy tworzeniu konta i można go później edytować lub wyczyścić w Ustawienia → Konto. Jest zapisany jako user_metadata.display_name w Supabase Auth, bez nowej migracji SQL. Istniejące konta zmieniają nick po zalogowaniu. Nick nie jest polem wejściowym dla modelu ani podstawą kontroli uprawnień.
+
+Informacja o prywatności jest w Ustawieniach oraz formularzu logowania, przed wysłaniem e-maila. Administrator: Fundacja Prześwit, kontakt: prywatnosc@wyjdzzbanki.pl. Pozostaje wersją roboczą do czasu określenia podstaw prawnych, retencji oraz weryfikacji ustawień i umów z dostawcami. Publiczne dane administratora/uzupełnienia są w privacy-config.js. Przegląd rzeczywistych przepływów i proponowany opis projektu: docs/privacy-review.md. Samo dodanie informacji i nicku nie potwierdza zgodności z RODO.
