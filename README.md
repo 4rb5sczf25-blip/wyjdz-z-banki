@@ -72,3 +72,5 @@ Sesja gościa jest zachowywana w tej przeglądarce, również po odświeżeniu i
 Ekran główny odczytuje pozostałe analizy z serwera (`GET /api/quota`), bez zużywania limitu i bez nowej migracji SQL. Licznik odświeża się po próbie analizy, po powrocie na ekran główny, aktywacji okna i zmianie dnia UTC. Pokazuje limit osobisty; nadal obowiązuje wspólny limit aplikacji i odstęp między analizami. Przy błędzie odczytu nie pokazuje wymyślonej liczby. Nieudane próby, którym serwer wcześniej przyznał limit, również zużywają limit.
 
 Wynik własnego tekstu ma etykietę „Analiza AI” lub „Analiza lokalna”. Przykłady są oznaczone „Materiał przykładowy”. Obok wyniku wyjaśniamy, że klasyfikacja może się mylić, a kategoria „fakt” nie jest weryfikacją prawdziwości.
+
+Jeśli licznik zgłasza `quota_read_denied`, wykonaj `supabase/migrations/202611050003_quota_read_permission.sql` w SQL Editor. Skrypt jawnie nadaje `SELECT` wyłącznie roli `service_role`, używanej przez serwer. Nie dodaje dostępu do tabeli gościom ani użytkownikom i nie wyłącza RLS. W nowych instalacjach wykonaj wszystkie trzy migracje w kolejności.
