@@ -34,7 +34,7 @@ const server = http.createServer(async (req, res) => {
         : { ...globalThis.AnalysisMethod.analyzeLocal(body.text,body.title), ai: true }));
       return;
     }
-    const files = { '/modal.js':'modal.js','/app-layout.js':'app-layout.js','/app-entry.js':'app-entry.js','/app-design.css':'app-design.css', '/account-session.js': 'account-session.js', '/account-data.js': 'account-data.js', '/': 'index.html', '/article-flow.js': 'article-flow.js', '/auth-return.js': 'auth-return.js', '/guest-session.js': 'guest-session.js', '/quota-view.js': 'quota-view.js', '/profile.js': 'profile.js', '/privacy-config.js': 'privacy-config.js', '/privacy.js': 'privacy.js', '/transparency.js': 'transparency.js', '/visual-polish.js': 'visual-polish.js', '/visual-polish.css': 'visual-polish.css', '/analysis-method.js': 'analysis-method.js', '/analysis-details.js': 'analysis-details.js', '/analysis-details.css': 'analysis-details.css', '/logo.jpg': 'logo.jpg', '/favicon.png': 'favicon.png', '/manifest.webmanifest': 'manifest.webmanifest' };
+    const files = { '/desktop-ui.js':'desktop-ui.js','/desktop-ui.css':'desktop-ui.css', '/modal.js':'modal.js','/app-layout.js':'app-layout.js','/app-entry.js':'app-entry.js','/app-design.css':'app-design.css', '/account-session.js': 'account-session.js', '/account-data.js': 'account-data.js', '/': 'index.html', '/article-flow.js': 'article-flow.js', '/auth-return.js': 'auth-return.js', '/guest-session.js': 'guest-session.js', '/quota-view.js': 'quota-view.js', '/profile.js': 'profile.js', '/privacy-config.js': 'privacy-config.js', '/privacy.js': 'privacy.js', '/transparency.js': 'transparency.js', '/visual-polish.js': 'visual-polish.js', '/visual-polish.css': 'visual-polish.css', '/analysis-method.js': 'analysis-method.js', '/analysis-details.js': 'analysis-details.js', '/analysis-details.css': 'analysis-details.css', '/logo.jpg': 'logo.jpg', '/favicon.png': 'favicon.png', '/manifest.webmanifest': 'manifest.webmanifest' };
     const file = files[req.url];
     if (!file) { res.statusCode = 404; res.end(); return; }
     res.setHeader('Content-Type', file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.html') ? 'text/html; charset=utf-8' : file.endsWith('.jpg') ? 'image/jpeg' : 'application/octet-stream');
@@ -361,8 +361,38 @@ sbStore({uid:'account-A',at:'A',rt:'A',exp:Date.now()+3600000});accountWrite('wz
   assert.equal(modalContrast,'rgb(16, 46, 64)');
   await evaluate(`modalTop().card.closeModal();setPref('light',false)`);
   console.log('PASS light theme uses actual colour tokens without image or semantic-colour inversion');
+  await command('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
+  await evaluate(`fitAppLayout();setPref('motion',false);setPref('light',false);show('Main')`);
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('.desktop-composer')).gridColumnStart`),'1');
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('.desktop-support')).gridColumnStart`),'2');
+  assert.ok(await evaluate(`document.getElementById('link').getBoundingClientRect().height>=130`));
+  assert.ok(await evaluate(`document.querySelector('.desktop-progress-note').parentElement.getBoundingClientRect().width>90`));
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('.desktop-progress-legacy-note')).display`),'none');
+  assert.equal(await evaluate(`document.querySelectorAll('#side [aria-current="page"]').length`),1);
+  const beforeDesktopCalls=calls.length;
+  await evaluate(`document.querySelector('#side .desktop-settings').click()`);await waitFor(`current==='Settings'`);
+  assert.equal(await evaluate(`document.querySelector('#side .desktop-settings').getAttribute('aria-current')`),'page');
+  await evaluate(`document.getElementById('desktop-new-analysis').click()`);
+  assert.equal(await evaluate(`current`),'Main');assert.equal(await evaluate(`document.activeElement.id`),'link');assert.equal(calls.length,beforeDesktopCalls);
+  await evaluate(`document.getElementById('desktop-account').click()`);assert.equal(await evaluate(`Boolean(document.getElementById('acBody'))`),true);
+  await evaluate(`modalTop().card.closeModal()`);
+  console.log('PASS desktop sidebar opens settings/account, highlights the current screen and focuses new analysis without API calls');
+  for(const [name,theme] of [['Main',false],['Main',true],['Compare',false],['Article',false],['Settings',false],['Sources',true]]){
+    await evaluate(`setPref('light',${theme});show(${JSON.stringify(name)})`);
+    if(name==='Compare')assert.equal(await evaluate(`getComputedStyle(document.querySelector('.desktop-comparison-results')).gridColumnStart`),'2');
+    if(process.env.WZB_SCREENSHOTS){const {data}=await command('Page.captureScreenshot',{format:'png'});await import('node:fs/promises').then(fs=>fs.writeFile(process.env.WZB_SCREENSHOTS+'/desktop-'+name.toLowerCase()+(theme?'-light':'-dark')+'.png',Buffer.from(data,'base64')));}
+  }
+  await command('Emulation.setDeviceMetricsOverride',{width:1024,height:768,deviceScaleFactor:1,mobile:false});
+  await evaluate(`fitAppLayout();setPref('light',false);show('Main')`);
+  assert.ok(await evaluate(`document.querySelector('.screen-content').scrollWidth<=document.querySelector('.screen-content').clientWidth+1`));
+  if(process.env.WZB_SCREENSHOTS){const {data}=await command('Page.captureScreenshot',{format:'png'});await import('node:fs/promises').then(fs=>fs.writeFile(process.env.WZB_SCREENSHOTS+'/desktop-main-1024.png',Buffer.from(data,'base64')));}
+  await command('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:false});
+  await evaluate(`fitAppLayout();show('Main')`);
+  const mobileOrder=await evaluate(`(()=>{const input=document.getElementById('link'),quota=document.getElementById('analysis-quota'),progress=document.querySelector('.desktop-progress');return{quota:quota.getBoundingClientRect().top,input:input.getBoundingClientRect().top,progress:progress.getBoundingClientRect().top,hero:getComputedStyle(document.querySelector('.desktop-welcome')).display}})()`);
+  assert.equal(mobileOrder.hero,'none');assert.ok(mobileOrder.quota<mobileOrder.input);assert.ok(mobileOrder.input<mobileOrder.progress);
+  console.log('PASS desktop dashboard has a large composer and side panel, comparison uses two columns, mobile order stays unchanged');
   assert.equal(exceptions.length, 0, JSON.stringify(exceptions));
-  console.log('31 browser scenarios passed; no real OpenAI or Supabase requests.');
+  console.log('33 browser scenarios passed; no real OpenAI or Supabase requests.');
 } finally {
   socket?.close(); browser.kill('SIGTERM');
   await new Promise(resolve => { if (browser.exitCode !== null) resolve(); else browser.once('exit', resolve); });

@@ -141,7 +141,7 @@ section[aria-live],#stage button[onclick]{animation:pop .28s ease both}
 .modal-body>button{display:block;min-height:48px;height:auto!important;margin-top:18px!important;padding:12px 16px;line-height:22px;white-space:normal}
 .article-scroll>*,.compare-scroll>*{flex-shrink:0}
 .compare-scroll{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-bottom:20px!important;scrollbar-width:thin;scrollbar-color:#5EE6D6 transparent}
-</style><link rel="stylesheet" href="/visual-polish.css"><link rel="stylesheet" href="/analysis-details.css"><link rel="stylesheet" href="/app-design.css"></head><body>
+</style><link rel="stylesheet" href="/visual-polish.css"><link rel="stylesheet" href="/analysis-details.css"><link rel="stylesheet" href="/app-design.css"><link rel="stylesheet" href="/desktop-ui.css"></head><body>
 <div id="stage"></div>
 <aside id="side" aria-label="Menu aplikacji">
 <div style="display:flex;align-items:center;gap:12px"><span style="display:block;width:56px;height:54px;overflow:hidden;border-radius:16px;position:relative;box-shadow:0 0 0 1px rgba(94,230,214,.35)"><img src="logo.jpg" alt="" style="position:absolute;left:-6px;top:-4px;width:68px;max-width:none"></span><span style="font-family:'Sora','Manrope',sans-serif;font-weight:700;font-size:18px">Wyjdź z bańki</span></div>
@@ -172,6 +172,7 @@ section[aria-live],#stage button[onclick]{animation:pop .28s ease both}
 <script src="/transparency.js"></script>
 <script src="/visual-polish.js"></script>
 <script src="/modal.js"></script>
+<script src="/desktop-ui.js"></script>
 <script src="/app-layout.js"></script>
 <script src="/app-entry.js"></script>
 <script>
@@ -441,11 +442,7 @@ function setCustomArticle(a){
 
 /* Desktop detection: wide window with a mouse. Phones and tablets keep the plain phone layout. */
 const deskMQ=matchMedia('(min-width: 900px) and (hover: hover) and (pointer: fine)');
-function syncSide(){
-  const links=document.querySelectorAll('#side .sd-link');if(!links.length)return;
-  const cur=stage.querySelector('nav.tabbar .tab[aria-current="page"]');const ix=cur?[...cur.parentNode.children].indexOf(cur):-1;
-  links.forEach((l,i)=>{if(i===ix)l.setAttribute('aria-current','page');else l.removeAttribute('aria-current')});
-}
+function syncSide(){syncDesktopNavigation(current)}
 function fitDesk(){fitAppLayout()}
 (function(){const v=document.getElementById('sdVer');if(v)v.textContent=APP_VERSION;const c=document.getElementById('copyLink');if(c)c.onclick=async()=>{try{await navigator.clipboard.writeText(location.href.split('#')[0]);c.textContent='Skopiowano'}catch(_){c.textContent='Skopiuj adres z paska przeglądarki'}setTimeout(()=>{c.textContent='Skopiuj link'},2200)}})();
 

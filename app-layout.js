@@ -30,6 +30,7 @@ function decorateLayout(root, name) {
     });
     content.append(main, side);
   }
+  decorateDesktopUI(screen, name, content);
   applyThemeTokens(screen);
   syncModalInert();
 }
