@@ -1,0 +1,6 @@
+{
+  "functions": {
+    "api/article.js": { "maxDuration": 30 },
+    "api/analyze.js": { "maxDuration": 30 }
+  }
+}

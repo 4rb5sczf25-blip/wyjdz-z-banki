@@ -2,6 +2,20 @@
   "name": "wyjdz-z-banki",
   "version": "1.0.0",
   "dependencies": {
+    "@mozilla/readability": "0.6.0",
+    "ipaddr.js": "2.2.0",
+    "jsdom": "26.1.0",
     "openai": "^4.20.0"
+  },
+  "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "test": "node --test --test-isolation=none tests/*.test.js",
+    "test:browser": "node tests/browser.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.3.14"
   }
 }
