@@ -150,6 +150,9 @@ async function analyzeOwnMaterial(event, say) {
 }
 
 function resizeMaterialInput(field) {
-  field.style.height = '48px';
-  field.style.height = Math.min(148, Math.max(48, field.scrollHeight + 2)) + 'px';
+  if(innerWidth>=1000)return;
+  const top=field.scrollTop;
+  field.style.height='auto';
+  field.style.height=Math.min(168,Math.max(112,field.scrollHeight+2))+'px';
+  field.scrollTop=top;
 }

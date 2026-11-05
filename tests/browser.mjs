@@ -34,7 +34,7 @@ const server = http.createServer(async (req, res) => {
         : { ...globalThis.AnalysisMethod.analyzeLocal(body.text,body.title), ai: true }));
       return;
     }
-    const files = { '/desktop-ui.js':'desktop-ui.js','/desktop-ui.css':'desktop-ui.css', '/modal.js':'modal.js','/app-layout.js':'app-layout.js','/app-entry.js':'app-entry.js','/app-design.css':'app-design.css', '/account-session.js': 'account-session.js', '/account-data.js': 'account-data.js', '/': 'index.html', '/article-flow.js': 'article-flow.js', '/auth-return.js': 'auth-return.js', '/guest-session.js': 'guest-session.js', '/quota-view.js': 'quota-view.js', '/profile.js': 'profile.js', '/privacy-config.js': 'privacy-config.js', '/privacy.js': 'privacy.js', '/transparency.js': 'transparency.js', '/visual-polish.js': 'visual-polish.js', '/visual-polish.css': 'visual-polish.css', '/analysis-method.js': 'analysis-method.js', '/analysis-details.js': 'analysis-details.js', '/analysis-details.css': 'analysis-details.css', '/logo.jpg': 'logo.jpg', '/favicon.png': 'favicon.png', '/manifest.webmanifest': 'manifest.webmanifest' };
+    const files = { '/welcome-ui.js':'welcome-ui.js','/interaction-ui.css':'interaction-ui.css', '/desktop-ui.js':'desktop-ui.js','/desktop-ui.css':'desktop-ui.css', '/modal.js':'modal.js','/app-layout.js':'app-layout.js','/app-entry.js':'app-entry.js','/app-design.css':'app-design.css', '/account-session.js': 'account-session.js', '/account-data.js': 'account-data.js', '/': 'index.html', '/article-flow.js': 'article-flow.js', '/auth-return.js': 'auth-return.js', '/guest-session.js': 'guest-session.js', '/quota-view.js': 'quota-view.js', '/profile.js': 'profile.js', '/privacy-config.js': 'privacy-config.js', '/privacy.js': 'privacy.js', '/transparency.js': 'transparency.js', '/visual-polish.js': 'visual-polish.js', '/visual-polish.css': 'visual-polish.css', '/analysis-method.js': 'analysis-method.js', '/analysis-details.js': 'analysis-details.js', '/analysis-details.css': 'analysis-details.css', '/logo.jpg': 'logo.jpg', '/favicon.png': 'favicon.png', '/manifest.webmanifest': 'manifest.webmanifest' };
     const file = files[req.url];
     if (!file) { res.statusCode = 404; res.end(); return; }
     res.setHeader('Content-Type', file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.html') ? 'text/html; charset=utf-8' : file.endsWith('.jpg') ? 'image/jpeg' : 'application/octet-stream');
@@ -410,11 +410,79 @@ sbStore({uid:'account-A',at:'A',rt:'A',exp:Date.now()+3600000});accountWrite('wz
   await evaluate(`setPref('motion',false);setPref('light',false);show('Main')`);
   if(process.env.WZB_SCREENSHOTS){const {data}=await command('Page.captureScreenshot',{format:'png'});await import('node:fs/promises').then(fs=>fs.writeFile(process.env.WZB_SCREENSHOTS+'/desktop-ai-field.png',Buffer.from(data,'base64')));}
   console.log('PASS AI input invitation pulses twice once per page, stops while writing and respects reduced motion');
+  await command('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
+  await command('Emulation.setDeviceMetricsOverride',{width:1440,height:900,deviceScaleFactor:1,mobile:false});
+  await evaluate(`fitAppLayout();setPref('motion',true);setPref('light',false);show('Splash')`);
+  assert.ok(await evaluate(`document.getElementById('start-account').getBoundingClientRect().width<=420`));
+  assert.equal(await evaluate(`getComputedStyle(document.getElementById('side')).display`),'none');
+  await delay(300);
+  if(process.env.WZB_SCREENSHOTS){const {data}=await command('Page.captureScreenshot',{format:'png'});await import('node:fs/promises').then(fs=>fs.writeFile(process.env.WZB_SCREENSHOTS+'/welcome-desktop.png',Buffer.from(data,'base64')));}
+  await evaluate(`window.welcomeEntry=playEntryDive(document.getElementById('start-guest'));true`);
+  assert.ok(await evaluate(`document.querySelector('.entry-dive-canvas').getBoundingClientRect().height<80`));
+  await evaluate(`window.welcomeEntry`);assert.equal(await evaluate(`current`),'Main');
+  assert.equal(await evaluate(`Boolean(document.querySelector('.entry-dive-canvas'))`),false);
+  console.log('PASS redesigned welcome has bounded actions and transitions directly to Main without a full-screen loading pause');
+  await evaluate(`show('Main');getComputedStyle(document.querySelector('.howto-reveal')).height;document.querySelector('.howto-toggle').click()`);
+  assert.equal(await evaluate(`document.querySelector('.howto-toggle').getAttribute('aria-expanded')`),'true');
+  assert.notEqual(await evaluate(`getComputedStyle(document.querySelector('.howto-reveal')).transitionDuration`),'0s');
+  await delay(350);
+  const panels=await evaluate(`(()=>{const a=document.querySelector('.desktop-composer').getBoundingClientRect(),b=document.querySelector('.desktop-support').getBoundingClientRect();return{top:Math.abs(a.top-b.top),bottom:Math.abs(a.bottom-b.bottom),open:document.querySelector('.howto-reveal').getBoundingClientRect().height}})()`);
+  assert.ok(panels.top<2&&panels.bottom<2&&panels.open>100,JSON.stringify(panels));
+  if(process.env.WZB_SCREENSHOTS){const {data}=await command('Page.captureScreenshot',{format:'png'});await import('node:fs/promises').then(fs=>fs.writeFile(process.env.WZB_SCREENSHOTS+'/panels-howto-open.png',Buffer.from(data,'base64')));}
+  await evaluate(`document.querySelector('.howto-toggle').click()`);await delay(350);
+  assert.equal(await evaluate(`document.querySelector('.howto-reveal').inert`),true);
+  assert.ok(await evaluate(`document.querySelector('.howto-reveal').getBoundingClientRect().height<1`));
+  console.log('PASS help opens and closes with a transition, while both desktop panels keep matching top and bottom edges');
+  await evaluate(`localStorage.removeItem('wzb-onboarded');maybeOnboard()`);
+  assert.ok(await evaluate(`document.querySelector('.onboarding-dialog').getBoundingClientRect().width<=540`));
+  assert.match(await evaluate(`document.getElementById('walkthrough-title').textContent`),/Jedno wydarzenie/);
+  await delay(350);
+  if(process.env.WZB_SCREENSHOTS){const {data}=await command('Page.captureScreenshot',{format:'png'});await import('node:fs/promises').then(fs=>fs.writeFile(process.env.WZB_SCREENSHOTS+'/walkthrough-desktop.png',Buffer.from(data,'base64')));}
+  await evaluate(`document.querySelector('.walkthrough-next').click()`);assert.match(await evaluate(`document.querySelector('.walkthrough-counter').textContent`),/Krok 2/);
+  await evaluate(`document.querySelector('.walkthrough-next').click();document.querySelector('.walkthrough-next').click()`);
+  await waitFor(`!document.querySelector('.onboarding-dialog')`);
+  assert.equal(await evaluate(`localStorage.getItem('wzb-onboarded')`),'1');assert.equal(await evaluate(`stage.firstElementChild.inert`),false);
+  console.log('PASS walkthrough stays bounded, advances through three steps, completes once and releases background focus');
+  await command('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:false});
+  await evaluate(`fitAppLayout();composerAttentionShown=false;show('Main')`);
+  assert.ok(await evaluate(`document.querySelector('.desktop-ai-badge').getBoundingClientRect().height>0`));
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('.desktop-input-wrap')).animationName`),'composer-invite');
+  await evaluate(`document.getElementById('link').focus();document.getElementById('link').value='Długi tekst do analizy. '.repeat(100);document.getElementById('link').dispatchEvent(new Event('input',{bubbles:true}))`);
+  assert.equal(await evaluate(`getComputedStyle(document.getElementById('link')).outlineStyle`),'none');
+  assert.ok(await evaluate(`document.getElementById('link').getBoundingClientRect().height<=170`));
+  assert.ok(await evaluate(`document.getElementById('link').scrollHeight>document.getElementById('link').clientHeight`));
+  if(process.env.WZB_SCREENSHOTS){const {data}=await command('Page.captureScreenshot',{format:'png'});await import('node:fs/promises').then(fs=>fs.writeFile(process.env.WZB_SCREENSHOTS+'/input-mobile.png',Buffer.from(data,'base64')));}
+  await evaluate(`window.savedViewport=Object.getOwnPropertyDescriptor(window,'visualViewport');Object.defineProperty(window,'visualViewport',{configurable:true,value:{height:360,width:390,offsetTop:32}});fitAppLayout()`);
+  await delay(80);
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('.app-screen>nav.tabbar')).display`),'none');
+  assert.ok(await evaluate(`Math.abs(stage.getBoundingClientRect().height-360)<2`));
+  assert.ok(await evaluate(`document.getElementById('link').getBoundingClientRect().top>=stage.getBoundingClientRect().top`));
+  assert.ok(await evaluate(`document.querySelector('.analyze-btn').getBoundingClientRect().bottom<=stage.getBoundingClientRect().bottom+1`));
+  await evaluate(`Object.defineProperty(window,'visualViewport',window.savedViewport);document.getElementById('link').blur();fitAppLayout()`);
+  console.log('PASS mobile input has AI badge and glow, wraps long text without a thick outline and stays usable in a simulated keyboard viewport');
+  await evaluate(`document.getElementById('link').focus();document.getElementById('link').setSelectionRange(12,24);window.savedDraft=document.getElementById('link').value;render('Main')`);
+  assert.equal(await evaluate(`document.getElementById('link').value`),await evaluate(`window.savedDraft`));
+  assert.equal(await evaluate(`document.getElementById('link').selectionStart`),12);
+  assert.equal(await evaluate(`document.activeElement.id`),'link');
+  assert.equal(await evaluate(`document.querySelectorAll('.screen-ghost').length`),0);
+  await evaluate(`sbStore(null)`);assert.equal(await evaluate(`document.getElementById('link').value`),'');
+  console.log('PASS data refresh preserves draft and cursor without clones; logout clears the previous account draft');
+  await evaluate(`document.getElementById('link').blur();setPref('motion',false);show('Splash')`);
+  assert.ok(await evaluate(`document.getElementById('start-guest').getBoundingClientRect().width<=390`));
+  if(process.env.WZB_SCREENSHOTS){const {data}=await command('Page.captureScreenshot',{format:'png'});await import('node:fs/promises').then(fs=>fs.writeFile(process.env.WZB_SCREENSHOTS+'/welcome-mobile.png',Buffer.from(data,'base64')));}
+  await evaluate(`show('Main');localStorage.removeItem('wzb-onboarded');maybeOnboard()`);
+  assert.ok(await evaluate(`document.querySelector('.onboarding-dialog').getBoundingClientRect().width<=390`));
+  assert.ok(await evaluate(`document.querySelector('.walkthrough-next').getBoundingClientRect().bottom<=innerHeight`));
+  if(process.env.WZB_SCREENSHOTS){const {data}=await command('Page.captureScreenshot',{format:'png'});await import('node:fs/promises').then(fs=>fs.writeFile(process.env.WZB_SCREENSHOTS+'/walkthrough-mobile.png',Buffer.from(data,'base64')));}
+  await evaluate(`modalTop().card.closeModal();setPref('light',true);show('Splash')`);
+  assert.equal(await evaluate(`getComputedStyle(stage).filter`),'none');
+  if(process.env.WZB_SCREENSHOTS){const {data}=await command('Page.captureScreenshot',{format:'png'});await import('node:fs/promises').then(fs=>fs.writeFile(process.env.WZB_SCREENSHOTS+'/welcome-mobile-light.png',Buffer.from(data,'base64')));}
+  console.log('PASS mobile welcome and walkthrough fit the viewport, keep actions visible and support the light theme');
   assert.equal(exceptions.length, 0, JSON.stringify(exceptions));
-  console.log('34 browser scenarios passed; no real OpenAI or Supabase requests.');
+  console.log('40 browser scenarios passed; no real OpenAI or Supabase requests.');
 } finally {
   socket?.close(); browser.kill('SIGTERM');
   await new Promise(resolve => { if (browser.exitCode !== null) resolve(); else browser.once('exit', resolve); });
   server.closeAllConnections(); await new Promise(resolve => server.close(resolve));
-  await rm(profile, { recursive: true, force: true });
+  await rm(profile, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
 }

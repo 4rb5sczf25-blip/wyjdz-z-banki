@@ -141,7 +141,7 @@ section[aria-live],#stage button[onclick]{animation:pop .28s ease both}
 .modal-body>button{display:block;min-height:48px;height:auto!important;margin-top:18px!important;padding:12px 16px;line-height:22px;white-space:normal}
 .article-scroll>*,.compare-scroll>*{flex-shrink:0}
 .compare-scroll{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-bottom:20px!important;scrollbar-width:thin;scrollbar-color:#5EE6D6 transparent}
-</style><link rel="stylesheet" href="/visual-polish.css"><link rel="stylesheet" href="/analysis-details.css"><link rel="stylesheet" href="/app-design.css"><link rel="stylesheet" href="/desktop-ui.css"></head><body>
+</style><link rel="stylesheet" href="/visual-polish.css"><link rel="stylesheet" href="/analysis-details.css"><link rel="stylesheet" href="/app-design.css"><link rel="stylesheet" href="/desktop-ui.css"><link rel="stylesheet" href="/interaction-ui.css"></head><body>
 <div id="stage"></div>
 <aside id="side" aria-label="Menu aplikacji">
 <div style="display:flex;align-items:center;gap:12px"><span style="display:block;width:56px;height:54px;overflow:hidden;border-radius:16px;position:relative;box-shadow:0 0 0 1px rgba(94,230,214,.35)"><img src="logo.jpg" alt="" style="position:absolute;left:-6px;top:-4px;width:68px;max-width:none"></span><span style="font-family:'Sora','Manrope',sans-serif;font-weight:700;font-size:18px">Wyjdź z bańki</span></div>
@@ -172,6 +172,7 @@ section[aria-live],#stage button[onclick]{animation:pop .28s ease both}
 <script src="/transparency.js"></script>
 <script src="/visual-polish.js"></script>
 <script src="/modal.js"></script>
+<script src="/welcome-ui.js"></script>
 <script src="/desktop-ui.js"></script>
 <script src="/app-layout.js"></script>
 <script src="/app-entry.js"></script>
@@ -399,37 +400,7 @@ async function shareCard(score,total,verdict){
   }catch(e){return e&&e.name==='AbortError'?'':'Nie udało się udostępnić'}
 }
 
-/* First-run walkthrough (3 steps) shown once over the start screen; "Przywróć domyślne" in Settings shows it again */
-function maybeOnboard(){
-  try{if(localStorage.getItem('wzb-onboarded'))return}catch(_){}
-  if(current!=='Main'||stage.querySelector('.ob-back'))return;
-  const ico=d=>'<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#5EE6D6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>';
-  const E='text-decoration: underline wavy #FF7A66; text-underline-offset: 4px; background: rgba(255,122,102,0.14)',O='border-bottom: 2px dashed #F2C94C; background: rgba(242,201,76,0.12)',F='border-bottom: 2px solid #5EE6D6; background: rgba(94,230,214,0.12)';
-  const steps=[
-    {i:ico('<circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/>'),h:'To samo wydarzenie, różne relacje',t:'Wybierz wydarzenie i zobacz, jak opisują je różne media. Porównasz nagłówki i to, jak bardzo sięgają po emocje.'},
-    {i:ico('<path d="M5 20V10M12 20V4M19 20v-7"/>'),h:'Podkreślenia w tekście',t:'Wskazujemy, co jest sprawdzalne, a co jest oceną lub grą na emocjach.',demo:'<span style="'+F+'">Sejm przyjął ustawę.</span> <span style="'+O+'">To najgorsza decyzja od lat.</span> <span style="'+E+'">Skandal!</span><div style="margin-top:6px;display:flex;gap:12px;flex-wrap:wrap;font-size:12px;line-height:16px;font-weight:700;color:#A9CBD4"><span>Fakt</span><span>Opinia</span><span>Emocje</span></div>'},
-    {i:ico('<circle cx="10" cy="14" r="6"/><circle cx="18" cy="6" r="2.5"/>'),h:'Schodź coraz głębiej',t:'Na mapie źródeł zobaczysz, gdzie leży każdy tytuł. Quizy i seria dni zabiorą Cię od Płycizny aż po Rafę.'}];
-  let n=0;
-  const back=document.createElement('div');back.className='ob-back';
-  const card=document.createElement('div');card.className='ob-card';card.setAttribute('role','dialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-label','Jak korzystać z aplikacji');
-  back.appendChild(card);stage.appendChild(back);
-  const close=()=>{try{localStorage.setItem('wzb-onboarded','1')}catch(_){}document.removeEventListener('keydown',key);
-    if(back.animate&&motionOK())back.animate([{opacity:1},{opacity:0}],{duration:220,fill:'forwards'}).onfinish=()=>back.remove();else back.remove()};
-  card.closeModal=close;
-  const key=e=>{if(e.key==='Escape')close()};document.addEventListener('keydown',key);
-  back.addEventListener('click',e=>{if(e.target===back)close()});
-  function draw(){
-    const st=steps[n],last=n===steps.length-1;
-    card.innerHTML='<div style="width:40px;height:4px;border-radius:4px;background:rgba(255,255,255,.25);margin:0 auto"></div><div class="ob-slide" style="margin-top:18px">'+st.i+'<h2>'+st.h+'</h2><p>'+st.t+'</p>'+(st.demo?'<div class="ob-demo">'+st.demo+'</div>':'')+'</div>'+
-      '<div role="img" aria-label="Krok '+(n+1)+' z '+steps.length+'" style="display:flex;justify-content:center;gap:8px;margin-top:20px">'+steps.map((_,i)=>'<span style="width:'+(i===n?22:8)+'px;height:8px;border-radius:8px;background:'+(i===n?'#5EE6D6':'rgba(255,255,255,.3)')+';transition:width .3s"></span>').join('')+'</div>'+
-      '<div style="display:flex;gap:10px;margin-top:18px"><button type="button" class="ob-btn ob-skip" style="flex:1;border:1px solid rgba(255,255,255,.28);background:transparent;color:#E8F6F8">'+(last?'Wstecz':'Pomiń')+'</button><button type="button" class="ob-btn ob-next" style="flex:2;border:0;background:#5EE6D6;color:#04202B">'+(last?'Zaczynamy':'Dalej')+'</button></div>';
-    card.querySelector('.ob-next').onclick=()=>{if(last)close();else{n++;draw()}};
-    card.querySelector('.ob-skip').onclick=()=>{if(last){n--;draw()}else close()};
-    card.querySelector('.ob-next').focus({preventScroll:true});
-  }
-  draw();
-}
-
+/* The first-run walkthrough is implemented in welcome-ui.js. */
 /* Local fallback when manual-text AI analysis is unavailable. */
 const CUSTOM_EV=3;
 function classifyInput(t){t=t.trim();if(/\s/.test(t))return 'text';return /^(https?:\/\/|www\.)/i.test(t)||/^[\w-]+(\.[\w-]+)+(?:[/?#]\S*)?$/.test(t)?'link':'text'}
@@ -793,16 +764,20 @@ let current=null;
 function render(name){
   const root=stage;
   const visualState=captureVisualState(root);
+  const input=current==='Main'&&name==='Main'?root.querySelector('#link'):null;
+  const draft=input?.dataset.materialSession===sessionVersion()?{text:input.value,start:input.selectionStart,end:input.selectionEnd,scroll:input.scrollTop,focused:document.activeElement===input}:null;
   const scrolls=[...root.querySelectorAll('*')].map(e=>e.scrollTop);
   const vals=inst[name].renderVals()||{};
   const frag=document.createDocumentFragment();
   tpl[name].childNodes.forEach(c=>build(c,vals,frag));
-  const keep=[...root.children].filter(e=>e.matches&&e.matches('.toast,.ob-back,.screen-ghost'));
+  const keep=[...root.children].filter(e=>e.matches&&e.matches('.toast,.ob-back'));
   root.replaceChildren(frag);
   keep.forEach(e=>root.appendChild(e));
+  if(draft)root.querySelector('#link').value=draft.text;
   decorateLayout(root,name);
   decorateVisuals(root,name,visualState);
   decorate(name);
+  if(draft){const field=root.querySelector('#link');resizeMaterialInput(field);field.setSelectionRange(draft.start,draft.end);field.scrollTop=draft.scroll;if(draft.focused&&!modalTop())field.focus({preventScroll:true});}
   if(current===name){[...root.querySelectorAll('*')].forEach((e,i)=>{if(scrolls[i])e.scrollTop=scrolls[i]})}
 }
 function show(name){
@@ -810,27 +785,19 @@ function show(name){
   if(!SCREENS[name])name='Splash';
   if(!tpl[name]){const d=new DOMParser().parseFromString('<body>'+SCREENS[name].html+'</body>','text/html');tpl[name]=d.body;
     const C=new Function('DCLogic',SCREENS[name].js+';return Component;')(DCLogic);inst[name]=new C(()=>render(name))}
-  /* Transition type: 'tab' (bottom nav → rise + fade), 'push' (deeper → slide in from right), 'back' (old slides out right, new zooms in) */
+  /* Keep navigation history; animate only the new screen, never cloned form controls. */
   let mode=navMode;navMode=null;
   if(!mode)mode=(dir<0||(navStack.length>1&&navStack[navStack.length-2]===name))?'back':'push';
   if(mode==='tab')navStack=[name];
   else if(mode==='back'){const i=navStack.lastIndexOf(name);navStack=i>=0?navStack.slice(0,i+1):[name]}
   else if(navStack[navStack.length-1]!==name)navStack.push(name);
   const prev=stage.firstElementChild;const had=current!==null||stage.childElementCount>0;
-  let ghost=null;
-  if(prev&&motionOK()){ghost=prev.cloneNode(true);ghost.classList.add('screen-ghost');ghost.style.cssText+=';position:absolute;left:0;top:0;pointer-events:none';}
+  const previousName=current;
   const prevTab=tabIndex(prev);
   current=null;render(name);current=name;document.title='Wyjdź z bańki';
-  const tabsMoved=animateTabs(prevTab);
+  animateTabs(prevTab);
   const root=stage.firstElementChild;
-  if(ghost&&had&&root){
-    ghost.inert=true;ghost.setAttribute('aria-hidden','true');
-    ghost.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
-    ghost.style.zIndex='5';stage.appendChild(ghost);
-    const fade=visualAnimate(ghost,[{opacity:1},{opacity:0}],{duration:180,easing:'ease-out',fill:'forwards'});
-    visualAnimate(root,[{opacity:.5,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:220,easing:'cubic-bezier(.22,.8,.24,1)'});
-    if(fade)fade.finished.then(()=>ghost.remove(),()=>ghost.remove());else ghost.remove();
-  }
+  if(had&&previousName!==name)visualAnimate(root,[{opacity:.65,transform:'translateY(4px)'},{opacity:1,transform:'none'}],{duration:180,easing:'ease-out'});
   playVisualEntry(name);
   dir=1;
   syncSide();

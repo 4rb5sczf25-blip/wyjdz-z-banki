@@ -1,7 +1,12 @@
 /* Adapt existing screens to real viewport dimensions; never scale text as an image. */
+let lastFittedViewportHeight=0;
 function fitAppLayout() {
   const viewport = window.visualViewport;
-  const width = Math.round(viewport?.width || innerWidth), height = Math.round(viewport?.height || innerHeight);
+  const width = innerWidth, height = Math.round(viewport?.height || innerHeight);
+  const active=document.activeElement,editing=active?.matches('input,textarea')&&width<1000;
+  const keyboard=Boolean(editing&&innerHeight-height>120);
+  document.documentElement.classList.toggle('keyboard-open',keyboard);
+  document.documentElement.style.setProperty('--viewport-top',Math.round(viewport?.offsetTop||0)+'px');
   document.documentElement.style.setProperty('--viewport-height', height + 'px');
   document.documentElement.classList.toggle('desk', width >= 1000);
   stage.style.transform = 'none';
@@ -9,9 +14,12 @@ function fitAppLayout() {
   document.getElementById('side')?.style.removeProperty('display');
   document.getElementById('side2')?.style.removeProperty('display');
   syncDesktopComposerHint();
+  const changed=Math.abs(height-lastFittedViewportHeight)>8;lastFittedViewportHeight=height;
+  if(keyboard&&changed)requestAnimationFrame(()=>{if(active.isConnected)(active.closest('.desktop-composer')||active).scrollIntoView({block:active.id==='link'?'start':'nearest',inline:'nearest'});});
 }
 function decorateLayout(root, name) {
   const screen = root.firstElementChild; if (!screen) return;
+  document.documentElement.classList.toggle('is-welcome',name==='Splash');
   screen.classList.add('app-screen'); screen.dataset.screen = name;
   const content = [...screen.children].find(el => el.style.flexGrow === '1');
   if (content) content.classList.add('screen-content');
@@ -37,6 +45,8 @@ function decorateLayout(root, name) {
 }
 addEventListener('resize', fitAppLayout);
 window.visualViewport?.addEventListener('resize', fitAppLayout);
+window.visualViewport?.addEventListener('scroll', fitAppLayout,{passive:true});
+document.addEventListener('focusout',()=>requestAnimationFrame(fitAppLayout));
 
 function applyThemeTokens(container) {
   const colours = { '#e8f6f8': 'var(--text)', '#a9cbd4': 'var(--muted)', '#cfe6ec': 'var(--secondary-text)', '#8fb3be': 'var(--muted)', '#7ff0e0': 'var(--accent-text)', '#ffb0a4':'var(--error-text)' };

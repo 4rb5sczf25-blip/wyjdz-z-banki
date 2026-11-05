@@ -55,8 +55,9 @@ function decorateDesktopMain(content) {
     analyzer.classList.add('desktop-composer');
     analyzer.prepend(desktopElement('div','desktop-only desktop-composer-heading','<span class="desktop-section-icon" aria-hidden="true">'+desktopIcon('arrow')+'</span><div><h2>Sprawdź wiadomość</h2><p>Wklej link do artykułu lub własny tekst.</p></div>'));
     const field=analyzer.querySelector('#link'),wrap=field.parentElement;
+    field.dataset.materialSession=sessionVersion();
     wrap.classList.add('desktop-input-wrap');
-    const caption=desktopElement('div','desktop-only desktop-input-caption');
+    const caption=desktopElement('div','desktop-input-caption');
     const label=desktopElement('label','desktop-input-label','Link lub tekst do analizy');label.htmlFor='link';
     const badge=desktopElement('span','desktop-ai-badge','<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4Z"/></svg>Analiza języka z AI');
     caption.append(label,badge);wrap.before(caption);
@@ -64,7 +65,8 @@ function decorateDesktopMain(content) {
     const stopAttention=()=>{wrap.classList.remove('is-inviting');wrap.classList.toggle('has-input',Boolean(field.value.trim()));};
     field.addEventListener('input',stopAttention);
     field.addEventListener('focus',stopAttention);
-    if(!composerAttentionShown&&matchMedia('(min-width:1000px)').matches&&motionOK()&&!field.value.trim()){
+    stopAttention();
+    if(!composerAttentionShown&&motionOK()&&!field.value.trim()){
       composerAttentionShown=true;wrap.classList.add('is-inviting');
       wrap.addEventListener('animationend',event=>{if(event.animationName==='composer-invite')wrap.classList.remove('is-inviting');},{once:true});
     }
@@ -86,7 +88,8 @@ function decorateDesktopMain(content) {
       detail.append(desktopElement('p','desktop-only desktop-progress-note','Postęp za czytanie i quizy.'));
     }
   }
-  helper.append(desktopElement('details','desktop-only desktop-howto','<summary>Jak korzystać z aplikacji?</summary><ol><li><span>1</span><div><strong>Wybierz materiał</strong><p>Wklej link lub tekst wiadomości.</p></div></li><li><span>2</span><div><strong>Przyjrzyj się językowi</strong><p>Sprawdź wyjaśnienia opinii i emocji.</p></div></li><li><span>3</span><div><strong>Poszerz perspektywę</strong><p>Porównaj źródła i zajrzyj do oryginału.</p></div></li></ol></div>'));
+  helper.append(desktopElement('div','desktop-only desktop-howto','<summary>Jak korzystać z aplikacji?</summary><ol><li><span>1</span><div><strong>Wybierz materiał</strong><p>Wklej link lub tekst wiadomości.</p></div></li><li><span>2</span><div><strong>Przyjrzyj się językowi</strong><p>Sprawdź wyjaśnienia opinii i emocji.</p></div></li><li><span>3</span><div><strong>Poszerz perspektywę</strong><p>Porównaj źródła i zajrzyj do oryginału.</p></div></li></ol></div>'));
+  bindHowtoDisclosure(helper.querySelector('.desktop-howto'));
   const anchor=welcome.nextElementSibling;content.insertBefore(helper,anchor);
   const events=[...content.children].find(el=>el.matches('section')&&el.querySelector('a[href="Compare.dc.html"]'));
   if(events){
@@ -115,6 +118,7 @@ function decorateDesktopUI(screen,name,content) {
   ensureDesktopShell();syncDesktopNavigation(name);
   if(!content)return;
   content.classList.add('desktop-content');
+  if(name==='Splash')decorateWelcome(screen,content);
   if(name==='Main')decorateDesktopMain(content);
   if(name==='Compare')decorateDesktopCompare(content);
   if(name==='Sources')content.lastElementChild?.classList.add('desktop-source-grid');
@@ -125,7 +129,5 @@ function decorateDesktopUI(screen,name,content) {
 function syncDesktopComposerHint(field=document.getElementById('link')) {
   if(!field)return;
   field.dataset.originalPlaceholder ||= field.placeholder;
-  field.placeholder=matchMedia('(min-width:1000px)').matches
-    ? 'Wklej link lub tekst — przyjrzyjmy się tej wiadomości'
-    : field.dataset.originalPlaceholder;
+  field.placeholder='Wklej link lub tekst — przyjrzyjmy się tej wiadomości';
 }
