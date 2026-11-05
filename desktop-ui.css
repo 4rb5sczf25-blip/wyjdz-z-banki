@@ -140,3 +140,21 @@
  .desktop-progress-details>div:first-child>span:last-child{white-space:nowrap}
  .desktop-progress>svg{stroke:var(--muted)}
 }
+/* A finite invitation to start; typing and focus leave a calm, visible frame. */
+@media(min-width:1000px){
+ .desktop-input-caption{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:8px}
+ .desktop-input-caption .desktop-input-label{margin:0}
+ .desktop-ai-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid rgba(94,230,214,.24);border-radius:999px;background:rgba(94,230,214,.07);color:var(--accent-text);font:700 10px/1.5 Manrope,sans-serif;white-space:nowrap}
+ .desktop-ai-badge svg{flex:none}
+ .desktop-input-wrap{border-radius:14px;box-shadow:0 0 0 1px rgba(94,230,214,.32),0 0 24px rgba(94,230,214,.055);transition:box-shadow .2s ease}
+ .desktop-composer .desktop-input-wrap #link{border-color:rgba(94,230,214,.35)!important}
+ .desktop-input-wrap.is-inviting{animation:composer-invite 1.6s ease-in-out 2}
+ .desktop-input-wrap:focus-within{box-shadow:0 0 0 2px var(--accent-text),0 0 24px rgba(94,230,214,.10)}
+ .desktop-composer .desktop-input-wrap #link:focus{outline:none!important}
+ .desktop-input-wrap.has-input:not(:focus-within){box-shadow:0 0 0 1px rgba(94,230,214,.28)}
+ html.light .desktop-input-wrap{box-shadow:0 0 0 1px rgba(9,109,101,.32),0 0 24px rgba(9,109,101,.06)}
+ html.light .desktop-input-wrap:focus-within{box-shadow:0 0 0 2px var(--accent-text),0 0 24px rgba(9,109,101,.1)}
+ @keyframes composer-invite{0%,100%{box-shadow:0 0 0 1px rgba(94,230,214,.32),0 0 24px rgba(94,230,214,.055)}50%{box-shadow:0 0 0 2px rgba(94,230,214,.65),0 0 34px rgba(94,230,214,.18)}}
+}
+.no-motion .desktop-input-wrap{animation:none!important;transition:none!important}
+@media(prefers-reduced-motion:reduce){.desktop-input-wrap{animation:none!important;transition:none!important}}

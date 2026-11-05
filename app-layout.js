@@ -8,6 +8,7 @@ function fitAppLayout() {
   stage.style.removeProperty('left'); stage.style.removeProperty('top');
   document.getElementById('side')?.style.removeProperty('display');
   document.getElementById('side2')?.style.removeProperty('display');
+  syncDesktopComposerHint();
 }
 function decorateLayout(root, name) {
   const screen = root.firstElementChild; if (!screen) return;

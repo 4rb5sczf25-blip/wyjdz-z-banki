@@ -1,4 +1,5 @@
 /* Desktop workspace uses the same controls and handlers as mobile. No extra API calls. */
+let composerAttentionShown = false;
 const DESKTOP_ICONS = {
   plus:'<path d="M12 5v14M5 12h14"/>', settings:'<path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/><path d="m9 3-1 3-3 1-2 3 2 2v3l3 1 1 3h5l1-3 3-1 2-3-2-2V7l-3-1-1-3Z"/>',
   user:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>', arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>'
@@ -53,8 +54,20 @@ function decorateDesktopMain(content) {
   if(analyzer) {
     analyzer.classList.add('desktop-composer');
     analyzer.prepend(desktopElement('div','desktop-only desktop-composer-heading','<span class="desktop-section-icon" aria-hidden="true">'+desktopIcon('arrow')+'</span><div><h2>Sprawdź wiadomość</h2><p>Wklej link do artykułu lub własny tekst.</p></div>'));
-    const label=desktopElement('label','desktop-only desktop-input-label','Link lub tekst do analizy');label.htmlFor='link';
-    analyzer.querySelector('#link').parentElement.before(label);
+    const field=analyzer.querySelector('#link'),wrap=field.parentElement;
+    wrap.classList.add('desktop-input-wrap');
+    const caption=desktopElement('div','desktop-only desktop-input-caption');
+    const label=desktopElement('label','desktop-input-label','Link lub tekst do analizy');label.htmlFor='link';
+    const badge=desktopElement('span','desktop-ai-badge','<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4Z"/></svg>Analiza języka z AI');
+    caption.append(label,badge);wrap.before(caption);
+    syncDesktopComposerHint(field);
+    const stopAttention=()=>{wrap.classList.remove('is-inviting');wrap.classList.toggle('has-input',Boolean(field.value.trim()));};
+    field.addEventListener('input',stopAttention);
+    field.addEventListener('focus',stopAttention);
+    if(!composerAttentionShown&&matchMedia('(min-width:1000px)').matches&&motionOK()&&!field.value.trim()){
+      composerAttentionShown=true;wrap.classList.add('is-inviting');
+      wrap.addEventListener('animationend',event=>{if(event.animationName==='composer-invite')wrap.classList.remove('is-inviting');},{once:true});
+    }
     analyzer.append(desktopElement('p','desktop-only desktop-composer-note','Podgląd artykułu z linku zatwierdzisz przed analizą AI. AI może popełniać błędy.'));
   }
   const account=content.querySelector('#main-account')?.parentElement;
@@ -107,4 +120,12 @@ function decorateDesktopUI(screen,name,content) {
   if(name==='Sources')content.lastElementChild?.classList.add('desktop-source-grid');
   if(name==='Article')content.querySelector('.article-header')?.classList.add('desktop-reading-header');
   content.querySelectorAll('header a[aria-label^="Wróć"]').forEach(link=>{link.classList.add('desktop-back-link');link.append(desktopElement('span','desktop-only','Wróć'));});
+}
+
+function syncDesktopComposerHint(field=document.getElementById('link')) {
+  if(!field)return;
+  field.dataset.originalPlaceholder ||= field.placeholder;
+  field.placeholder=matchMedia('(min-width:1000px)').matches
+    ? 'Wklej link lub tekst — przyjrzyjmy się tej wiadomości'
+    : field.dataset.originalPlaceholder;
 }

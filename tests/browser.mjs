@@ -391,8 +391,27 @@ sbStore({uid:'account-A',at:'A',rt:'A',exp:Date.now()+3600000});accountWrite('wz
   const mobileOrder=await evaluate(`(()=>{const input=document.getElementById('link'),quota=document.getElementById('analysis-quota'),progress=document.querySelector('.desktop-progress');return{quota:quota.getBoundingClientRect().top,input:input.getBoundingClientRect().top,progress:progress.getBoundingClientRect().top,hero:getComputedStyle(document.querySelector('.desktop-welcome')).display}})()`);
   assert.equal(mobileOrder.hero,'none');assert.ok(mobileOrder.quota<mobileOrder.input);assert.ok(mobileOrder.input<mobileOrder.progress);
   console.log('PASS desktop dashboard has a large composer and side panel, comparison uses two columns, mobile order stays unchanged');
+  await command('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
+  await command('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
+  await evaluate(`fitAppLayout();setPref('motion',true);composerAttentionShown=false;show('Main')`);
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('.desktop-input-wrap')).animationName`),'composer-invite');
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('.desktop-input-wrap')).animationIterationCount`),'2');
+  assert.match(await evaluate(`document.querySelector('.desktop-ai-badge').textContent`),/Analiza języka z AI/);
+  assert.match(await evaluate(`document.getElementById('link').placeholder`),/przyjrzyjmy/);
+  await evaluate(`document.getElementById('link').value='Własny tekst';document.getElementById('link').dispatchEvent(new Event('input',{bubbles:true}))`);
+  assert.equal(await evaluate(`document.querySelector('.desktop-input-wrap').classList.contains('is-inviting')`),false);
+  assert.equal(await evaluate(`document.querySelector('.desktop-input-wrap').classList.contains('has-input')`),true);
+  await evaluate(`show('Main')`);assert.equal(await evaluate(`document.querySelector('.desktop-input-wrap').classList.contains('is-inviting')`),false);
+  await evaluate(`composerAttentionShown=false;show('Main');setPref('motion',false)`);
+  assert.equal(await evaluate(`document.querySelector('.desktop-input-wrap').classList.contains('is-inviting')`),false);
+  await command('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
+  await evaluate(`setPref('motion',true);composerAttentionShown=false;show('Main')`);
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('.desktop-input-wrap')).animationName`),'none');
+  await evaluate(`setPref('motion',false);setPref('light',false);show('Main')`);
+  if(process.env.WZB_SCREENSHOTS){const {data}=await command('Page.captureScreenshot',{format:'png'});await import('node:fs/promises').then(fs=>fs.writeFile(process.env.WZB_SCREENSHOTS+'/desktop-ai-field.png',Buffer.from(data,'base64')));}
+  console.log('PASS AI input invitation pulses twice once per page, stops while writing and respects reduced motion');
   assert.equal(exceptions.length, 0, JSON.stringify(exceptions));
-  console.log('33 browser scenarios passed; no real OpenAI or Supabase requests.');
+  console.log('34 browser scenarios passed; no real OpenAI or Supabase requests.');
 } finally {
   socket?.close(); browser.kill('SIGTERM');
   await new Promise(resolve => { if (browser.exitCode !== null) resolve(); else browser.once('exit', resolve); });

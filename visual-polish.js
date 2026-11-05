@@ -15,6 +15,7 @@ function clearCardReveals() {
   pendingCards.forEach(card => card.classList.remove('reveal-pending')); pendingCards.clear();
 }
 function stopVisualMotion() {
+  document.querySelectorAll('.desktop-input-wrap.is-inviting').forEach(element=>element.classList.remove('is-inviting'));
   if (typeof finishEntryNow === 'function') finishEntryNow();
   clearCardReveals();
   visualAnimations.forEach(animation => animation.cancel()); visualAnimations.clear();

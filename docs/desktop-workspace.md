@@ -21,8 +21,10 @@ Ulepszenia komputerowe są aktywne od 1000 px. Na laptopach 1000–1199 px karty
 
 ## Weryfikacja
 
-- 60 testów automatycznych oraz 33 scenariusze przeglądarkowe Chromium przechodzą.
+- 60 testów automatycznych oraz 34 scenariusze przeglądarkowe Chromium przechodzą.
 - Sprawdzono 13 ścieżek ekranów przy rozmiarach 320×568, 390×844, 1280×900 i 1440×900 oraz dodatkowo pulpit laptopa przy 1024×768.
 - Nowe scenariusze sprawdzają konto i ustawienia z menu, poprawne oznaczenie aktywnego działu, fokus po „Nowa analiza”, układ formularza i panelu, szerokość postępów, porównanie w dwóch kolumnach i niezmienioną kolejność na telefonie.
 - Ręcznie obejrzano zrzuty pulpitu w jasnym/ciemnym motywie, porównania, artykułu, źródeł i ustawień.
 - Bez rzeczywistych wywołań OpenAI ani Supabase; bez zmian bazy i sekretów. Testy rozmiarów używają Chromium, nie fizycznego Safari.
+
+Pole analizy wyróżnia turkusowa ramka i delikatna poświata, etykieta „Analiza języka z AI” oraz dwa krótkie rozświetlenia, najwyżej raz podczas otwarcia strony. Fokus i pisanie kończą rozświetlenia. Ustawienia ograniczenia ruchu wyłączają animację. Wersja telefonu zachowuje poprzedni tekst podpowiedzi.
