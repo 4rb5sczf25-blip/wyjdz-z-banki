@@ -3,7 +3,7 @@ import http from 'node:http';
 import https from 'node:https';
 import net from 'node:net';
 import ipaddr from 'ipaddr.js';
-import { JSDOM } from 'jsdom';
+import { JSDOM, VirtualConsole } from 'jsdom';
 import { Readability } from '@mozilla/readability';
 import { HttpError, MAX_TEXT, MIN_TEXT } from './policy.js';
 
@@ -86,7 +86,14 @@ async function withAbort(promise, signal) {
 }
 export function extractArticle(html, url, contentType = 'text/html') {
   // No scripts or external resources are enabled in JSDOM. Return plain text only.
-  const dom = new JSDOM(html, { url: url.href, contentType });
+  const virtualConsole = new VirtualConsole();
+  virtualConsole.on('jsdomError', error => {
+    // Publisher CSS is irrelevant to Readability. Never log its raw contents.
+    // Preserve a safe diagnostic for other DOM warnings; thrown parser errors
+    // still propagate normally and are handled as extraction failures.
+    if (error.type !== 'css parsing') console.warn('article_dom_warning', { type: error.type });
+  });
+  const dom = new JSDOM(html, { url: url.href, contentType, virtualConsole });
   try {
     const article = new Readability(dom.window.document, { charThreshold: MIN_TEXT, maxElemsToParse: 20000 }).parse();
     const full = (article?.textContent || '').replace(/[\t\r ]+/g, ' ').replace(/\n\s*\n+/g, '\n\n').trim();

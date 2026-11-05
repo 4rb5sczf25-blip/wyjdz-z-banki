@@ -88,3 +88,14 @@ test('transport rejects MIME types, compressed payloads, oversized headers/bodie
     await assert.rejects(() => requestHTML(new URL('http://example.com'), '8.8.8.8'), { status: 422 });
   } finally { http.request = original; }
 });
+
+test('unsupported publisher CSS does not prevent extraction or flood logs with page content', () => {
+  const original = console.warn; const warnings = [];
+  console.warn = (...args) => warnings.push(args);
+  try {
+    const content = html.replace('</head>', '<style>body { color: red; /* unclosed publisher comment</style></head>');
+    const article = extractArticle(Buffer.from(content), new URL('https://example.com'));
+    assert.match(article.text, /Sejm przyjął/);
+    assert.equal(warnings.length, 0);
+  } finally { console.warn = original; }
+});

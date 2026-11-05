@@ -16,3 +16,8 @@ test('quota reads reject writes and never fabricate a count on database failure'
   const r=response();await handler({method:'POST'},r);assert.equal(r.code,405);
   const error=response();await handler({method:'GET'},error);assert.equal(error.code,503);assert.equal(error.body.remaining,undefined);
 });
+
+test('permission denial has a specific safe diagnostic message', async () => {
+  const handler=makeHandler({identity:async()=>({user,url:'https://example.supabase.co',key:'secret-not-to-be-logged'}),fetcher:async()=>({ok:false,status:403,json:async()=>({code:'42501',message:'permission denied'})})});
+  const r=response();await handler({method:'GET'},r);assert.equal(r.code,503);assert.match(r.body.error,/quota_read_denied/);assert.doesNotMatch(JSON.stringify(r.body),/secret-not/);
+});

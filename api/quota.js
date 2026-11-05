@@ -13,7 +13,15 @@ export function makeHandler({ identity = identify, fetcher = fetch, now = () => 
       const response = await fetcher(url + '/rest/v1/analysis_quota?' + query, {
         headers: { apikey: key, Authorization: 'Bearer ' + key }, signal: AbortSignal.timeout(5000), redirect: 'error'
       });
-      if (!response.ok) throw new HttpError(503, 'Nie udało się odczytać limitu analiz.');
+      if (!response.ok) {
+        // Log only safe diagnostic codes, never keys, tokens, request headers or rows.
+        let code = 'unknown';
+        try { const body = await response.json(); if (/^[A-Za-z0-9_]{1,40}$/.test(body?.code || '')) code = body.code; } catch (_) {}
+        console.warn('quota_read_failed', { status: response.status, code });
+        throw new HttpError(503, code === '42501'
+          ? 'Serwer nie ma uprawnień do odczytu licznika w Supabase. Kod: quota_read_denied.'
+          : 'Nie udało się odczytać limitu analiz w Supabase. Kod: quota_read_failed.');
+      }
       const rows = await response.json();
       if (!Array.isArray(rows) || rows.length > 1 || (rows.length && (!Number.isInteger(rows[0].used) || rows[0].used < 0))) throw new HttpError(503, 'Nie udało się odczytać limitu analiz.');
       const limit = user.is_anonymous === true ? 2 : 5;
