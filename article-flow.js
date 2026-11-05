@@ -30,11 +30,13 @@ function validMaterialAnalysis(d) {
 }
 function showMaterialAnalysis(result, text, source) {
   if (current !== 'Main') return;
+  const sourceMetadata = typeof source === 'object' && source ? { title: source.title, author: source.author, publishedAt: source.publishedAt, url: source.url, truncated: Boolean(source.truncated) } : null;
+  const sourceURL = sourceMetadata ? sourceMetadata.url : source;
   const article = {
     id: 'me', name: result.ai ? 'Analiza AI' : 'Analiza lokalna', lean: 'C',
     pct: Math.max(0, Math.min(100, Math.round(Number(result.pct) || 0))),
     head: String(result.head || result.s[0][1]).slice(0, 140),
-    s: result.s, raw: text, ai: Boolean(result.ai), source: source || null
+    s: result.s, raw: text, ai: Boolean(result.ai), source: sourceURL || null, sourceMetadata
   };
   setCustomArticle(article);
   select({ ev: CUSTOM_EV, src: 'me', from: 'Main' });
@@ -83,7 +85,7 @@ function previewMaterial(data) {
           // Closing the dialog or leaving the screen discards late responses.
           if (cancelled || card.dataset.closed || !card.isConnected || current !== 'Main') return;
           dismiss();
-          showMaterialAnalysis({ ...result, ai: true }, text, data.url);
+          showMaterialAnalysis({ ...result, ai: true }, text, data);
         } catch (e) { if (card.isConnected) error.textContent = e.message; }
         finally { restore(); field.disabled = false; }
       };

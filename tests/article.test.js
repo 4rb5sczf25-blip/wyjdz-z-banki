@@ -99,3 +99,12 @@ test('unsupported publisher CSS does not prevent extraction or flood logs with p
     assert.equal(warnings.length, 0);
   } finally { console.warn = original; }
 });
+
+test('extraction preserves publisher metadata and does not invent absent authors or dates', () => {
+  const withMetadata = html.replace('</head>', '<meta name="author" content="Autorka Testowa"><meta property="article:published_time" content="2026-11-03T08:00:00+01:00"></head>');
+  const result = extractArticle(Buffer.from(withMetadata), new URL('https://example.com/story'));
+  assert.equal(result.author, 'Autorka Testowa');
+  assert.equal(result.publishedAt, '2026-11-03T08:00:00+01:00');
+  const missing = extractArticle(Buffer.from(html), new URL('https://example.com/story'));
+  assert.equal(missing.author, null); assert.equal(missing.publishedAt, null);
+});

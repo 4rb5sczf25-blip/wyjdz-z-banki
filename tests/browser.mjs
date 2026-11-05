@@ -33,7 +33,7 @@ const server = http.createServer(async (req, res) => {
         : { s: [['fact', body.text.slice(0, 100)]], head: 'Wynik testowy', pct: 3, ai: true }));
       return;
     }
-    const files = { '/': 'index.html', '/article-flow.js': 'article-flow.js', '/auth-return.js': 'auth-return.js', '/guest-session.js': 'guest-session.js', '/quota-view.js': 'quota-view.js', '/profile.js': 'profile.js', '/privacy-config.js': 'privacy-config.js', '/privacy.js': 'privacy.js', '/logo.jpg': 'logo.jpg', '/favicon.png': 'favicon.png', '/manifest.webmanifest': 'manifest.webmanifest' };
+    const files = { '/': 'index.html', '/article-flow.js': 'article-flow.js', '/auth-return.js': 'auth-return.js', '/guest-session.js': 'guest-session.js', '/quota-view.js': 'quota-view.js', '/profile.js': 'profile.js', '/privacy-config.js': 'privacy-config.js', '/privacy.js': 'privacy.js', '/transparency.js': 'transparency.js', '/logo.jpg': 'logo.jpg', '/favicon.png': 'favicon.png', '/manifest.webmanifest': 'manifest.webmanifest' };
     const file = files[req.url];
     if (!file) { res.statusCode = 404; res.end(); return; }
     res.setHeader('Content-Type', file.endsWith('.js') ? 'text/javascript' : file.endsWith('.html') ? 'text/html; charset=utf-8' : file.endsWith('.jpg') ? 'image/jpeg' : 'application/octet-stream');
@@ -98,6 +98,15 @@ if(String(input).includes('.supabase.co/auth/v1/signup')){window.guestSignups++;
   await waitFor(`location.hash === '#Article'`);
   assert.equal(await evaluate(`document.getElementById('analysis-mode').textContent`),'Analiza AI');
   assert.match(await evaluate(`document.querySelector('[aria-label="Sposób analizy"]').textContent`),/nie potwierdza jego prawdziwości/);
+  await evaluate(`document.getElementById('source-details').click()`);
+  assert.equal(await evaluate(`document.getElementById('source-original').href`),'https://example.com/article');
+  assert.match(await evaluate(`document.querySelector('[aria-labelledby="source-details-title"]').textContent`),/Brak danych/);
+  assert.equal(await evaluate(`Boolean(window.injected)`),false);
+  await evaluate(`document.querySelector('[aria-labelledby="source-details-title"] [data-close]').click();document.querySelector('[aria-label="Jak działa nasza analiza?"]').click()`);
+  assert.match(await evaluate(`document.querySelector('[aria-labelledby="analysis-help-title"]').textContent`),/0,35/);
+  assert.match(await evaluate(`document.querySelector('[aria-labelledby="analysis-help-title"]').textContent`),/nie prawdopodobieństwo fałszu/);
+  await evaluate(`document.querySelector('[aria-labelledby="analysis-help-title"] [data-close]').click()`);
+  console.log('PASS real source link and missing metadata, escaped text, disclosed score method');
   assert.equal(calls.length, 2); assert.equal(calls[1].path, '/api/analyze'); assert.equal(calls[1].body.text, edited);
   console.log('PASS confirmation sends edited text exactly once and displays AI result');
   await main(); await waitFor(`document.getElementById('analysis-quota').textContent.includes('4 z 5')`); console.log('PASS remaining AI quota comes from server and updates after analysis'); await submit('https://example.com/cancel'); await waitFor(`Boolean(document.getElementById('article-preview'))`);
@@ -171,8 +180,18 @@ if(String(input).includes('.supabase.co/auth/v1/signup')){window.guestSignups++;
   await evaluate(`document.querySelectorAll('.ob-back').forEach(e=>e.remove());location.hash='Settings';show('Settings');document.getElementById('settings-privacy').click()`);
   assert.equal(await evaluate(`Boolean(document.getElementById('privacy-title'))`),true);
   console.log('PASS optional nickname saves/clears; signup metadata; privacy available before signup and in settings');
+  await evaluate(`document.querySelectorAll('.ob-back').forEach(e=>e.remove());select({ev:0,src:null,from:'Compare'});location.hash='Compare';show('Compare')`);
+  await evaluate(`document.getElementById('comparison-why').click()`);
+  const comparisonHelp = await evaluate(`document.querySelector('[aria-labelledby="comparison-why-title"]').innerText`);
+  assert.match(comparisonHelp,/przygotowano ręcznie/);assert.match(comparisonHelp,/fikcyjne media/);assert.match(comparisonHelp,/3 z 9/);
+  await evaluate(`document.querySelector('[aria-labelledby="comparison-why-title"] [data-close]').click();select({src:'ds',from:'Compare'});location.hash='Article';show('Article');document.getElementById('source-details').click()`);
+  assert.match(await evaluate(`document.querySelector('[aria-labelledby="source-details-title"]').innerText`),/postać fikcyjna/);
+  assert.equal(await evaluate(`Boolean(document.getElementById('source-original'))`),false);
+  await evaluate(`document.querySelector('[aria-labelledby="source-details-title"] [data-close]').click();document.querySelector('[aria-label="Jak działa nasza analiza?"]').click()`);
+  assert.match(await evaluate(`document.querySelector('[aria-labelledby="analysis-help-title"]').innerText`),/procenty ustawiono ręcznie/);
+  console.log('PASS comparison rationale and fictional metadata clearly labeled; demo URLs not clickable');
   assert.equal(exceptions.length, 0, JSON.stringify(exceptions));
-  console.log('12 browser scenarios passed; no real OpenAI or Supabase requests.');
+  console.log('14 browser scenarios passed; no real OpenAI or Supabase requests.');
 } finally {
   socket?.close(); browser.kill('SIGTERM');
   await new Promise(resolve => { if (browser.exitCode !== null) resolve(); else browser.once('exit', resolve); });

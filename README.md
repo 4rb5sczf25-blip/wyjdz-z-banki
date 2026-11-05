@@ -80,3 +80,11 @@ Jeśli licznik zgłasza `quota_read_denied`, wykonaj `supabase/migrations/202611
 Opcjonalny nick/imię (do 40 znaków) podaje się przy tworzeniu konta i można go później edytować lub wyczyścić w Ustawienia → Konto. Jest zapisany jako user_metadata.display_name w Supabase Auth, bez nowej migracji SQL. Istniejące konta zmieniają nick po zalogowaniu. Nick nie jest polem wejściowym dla modelu ani podstawą kontroli uprawnień.
 
 Informacja o prywatności jest w Ustawieniach oraz formularzu logowania, przed wysłaniem e-maila. Administrator: Fundacja Prześwit, kontakt: prywatnosc@wyjdzzbanki.pl. Pozostaje wersją roboczą do czasu określenia podstaw prawnych, retencji oraz weryfikacji ustawień i umów z dostawcami. Publiczne dane administratora/uzupełnienia są w privacy-config.js. Przegląd rzeczywistych przepływów i proponowany opis projektu: docs/privacy-review.md. Samo dodanie informacji i nicku nie potwierdza zgodności z RODO.
+
+## Przejrzystość porównań i źródeł
+
+Przycisk „Dlaczego te artykuły?” wyjaśnia wspólny temat, ręczny dobór i kolejność demonstracyjnych materiałów. Zestawy nie są wynikiem automatycznego wyszukiwania rzeczywistych publikacji. Fikcyjne nazwiska autorów, daty i nieaktywne adresy w zarezerwowanej domenie `.example` są oznaczone jako demonstracyjne. Etykiety polityczne mapy nie są oceną prawdziwych redakcji.
+
+„Źródło i oryginał” przy wyniku pokazuje metadane, adres oraz zakres analizy. Dla rzeczywistych linków ekstraktor odczytuje autora i datę publikacji ze strony, jeśli są dostępne; nie uzupełnia braków fikcyjnymi danymi. Informuje o skróceniu do 12 000 znaków, możliwości edycji podglądu i analizie maksymalnie 12 zdań. Przycisk otwarcia oryginału prowadzi do rzeczywistego adresu; demonstracyjne adresy są nieaktywne.
+
+Pop-up metodologii ujawnia wzór nowych analiz: `100 × (emocje + 0,35 × opinie) / liczba zdań`, po zaokrągleniu ograniczony do 3–97%. To umowny wskaźnik języka, nie ocena wiarygodności ani prawdopodobieństwo fałszu. Procenty dotychczasowej makiety pozostają wartościami ustawionymi ręcznie i są tak opisane. Instrukcja modelu wymaga jednakowych kryteriów niezależnie od wydawcy i poglądów; aplikacja nie deklaruje, że AI jest wolna od stronniczości. Użytkownik może zgłosić błędne zestawienie i nieprawidłowe źródło.

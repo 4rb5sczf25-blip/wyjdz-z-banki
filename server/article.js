@@ -98,7 +98,10 @@ export function extractArticle(html, url, contentType = 'text/html') {
     const article = new Readability(dom.window.document, { charThreshold: MIN_TEXT, maxElemsToParse: 20000 }).parse();
     const full = (article?.textContent || '').replace(/[\t\r ]+/g, ' ').replace(/\n\s*\n+/g, '\n\n').trim();
     if (full.length < MIN_TEXT) throw new HttpError(422, 'Nie udało się odczytać artykułu. Strona może wymagać logowania lub JavaScript. Wklej tekst ręcznie.');
-    return { title: (article.title || url.hostname).slice(0, 200), url: url.href, text: full.slice(0, MAX_TEXT), truncated: full.length > MAX_TEXT, maxLength: MAX_TEXT };
+    const published = dom.window.document.querySelector('meta[property="article:published_time"], meta[name="date"], meta[itemprop="datePublished"]')?.content || '';
+    const publishedAt = /^\d{4}-\d{2}-\d{2}/.test(published) && Number.isFinite(Date.parse(published)) ? published.slice(0, 80) : null;
+    return { title: (article.title || url.hostname).slice(0, 200), author: article.byline?.trim().slice(0, 160) || null,
+      publishedAt, url: url.href, text: full.slice(0, MAX_TEXT), truncated: full.length > MAX_TEXT, maxLength: MAX_TEXT };
   } finally { dom.window.close(); }
 }
 export async function fetchArticle(raw, { resolve = dns.resolve4, request = requestHTML, timeout = 10000 } = {}) {
