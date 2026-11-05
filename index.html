@@ -157,10 +157,10 @@ section[aria-live],#stage button[onclick]{animation:pop .28s ease both}
 
 <script>
 /* App version: bump this on every release (shown on the splash, in Settings and in the desktop side panel) */
-const APP_VERSION='Beta 0.1';
+const APP_VERSION='Beta 0.2';
 /* Where tester feedback goes. Set ONE of these: a form endpoint (POST JSON, e.g. Formspree) or an e-mail address. With both empty, the tester gets the text to share/copy. */
 const FEEDBACK_ENDPOINT='';
-const FEEDBACK_EMAIL='';
+const FEEDBACK_EMAIL='support@wyjdzzbanki.pl';
 const PREFS_KEY='wzb-settings',PREF_DEFAULTS={motion:true,haptics:true,splash:true,light:false,timer:true,sound:true};
 let PREFS=(()=>{try{return Object.assign({},PREF_DEFAULTS,JSON.parse(localStorage.getItem(PREFS_KEY)||'{}'))}catch(_){return Object.assign({},PREF_DEFAULTS)}})();
 function applyPrefs(){document.documentElement.classList.toggle('no-motion',!PREFS.motion);document.documentElement.classList.toggle('light',!!PREFS.light);const t=document.querySelector('meta[name=theme-color]');if(t)t.setAttribute('content',PREFS.light?'#E4F2F6':'#04111D')}
