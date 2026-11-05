@@ -1,6 +1,6 @@
 # Wersja do oceny po audycie — punkty 4–6
 
-Gałąź `feat/responsive-ui-polish` zawiera również wcześniejsze poprawki kont i synchronizacji (commit bazowy `ab24379`). Nie połączono jej z `main` i nie wykonano wdrożenia produkcyjnego. Nie wymaga nowej migracji SQL, sekretów ani płatnych usług.
+Gałąź `feat/responsive-ui-polish` zawiera również wcześniejsze poprawki kont i synchronizacji (commit bazowy `ab24379`). Operator zatwierdził publikację tych zmian jako **Beta 0.80**. Publikacja odbywa się przez gałąź `main` powiązaną z Vercel; zakończenie wdrożenia wymaga sprawdzenia statusu Vercel. Nie wymaga nowej migracji SQL, sekretów ani płatnych usług.
 
 ## Co zmieniło się dla użytkownika
 

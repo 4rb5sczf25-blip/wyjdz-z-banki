@@ -176,7 +176,7 @@ section[aria-live],#stage button[onclick]{animation:pop .28s ease both}
 <script src="/app-entry.js"></script>
 <script>
 /* App version: bump this on every release (shown on the splash, in Settings and in the desktop side panel) */
-const APP_VERSION='Beta 0.79';
+const APP_VERSION='Beta 0.80';
 /* Where tester feedback goes. Set ONE of these: a form endpoint (POST JSON, e.g. Formspree) or an e-mail address. With both empty, the tester gets the text to share/copy. */
 const PREFS_KEY='wzb-settings',PREF_DEFAULTS={motion:true,haptics:true,splash:true,light:false,timer:true,sound:false};
 let PREFS=(()=>{try{return Object.assign({},PREF_DEFAULTS,JSON.parse(localStorage.getItem(PREFS_KEY)||'{}'))}catch(_){return Object.assign({},PREF_DEFAULTS)}})();
