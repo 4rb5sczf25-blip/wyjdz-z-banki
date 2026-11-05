@@ -14,6 +14,12 @@ let guestAI = 0;
 const articleText = 'Sejm przyjął nową ustawę dotyczącą transportu regionalnego. Moim zdaniem to dobry pomysł. To skandal! </textarea><img src=x onerror="window.injected=true">';
 const server = http.createServer(async (req, res) => {
   try {
+    if (req.url === '/api/quota') {
+      const token=req.headers.authorization;
+      const limit=token==='Bearer guest.jwt.token'?2:5;
+      const used=calls.filter(c=>c.path==='/api/analyze'&&c.auth===token).length;
+      res.setHeader('Content-Type','application/json');res.end(JSON.stringify({day:new Date().toISOString().slice(0,10),limit,remaining:Math.max(0,limit-used)}));return;
+    }
     if (req.url.startsWith('/api/')) {
       let raw = ''; for await (const part of req) raw += part;
       const body = JSON.parse(raw); calls.push({ path: req.url, body, auth: req.headers.authorization });
@@ -27,7 +33,7 @@ const server = http.createServer(async (req, res) => {
         : { s: [['fact', body.text.slice(0, 100)]], head: 'Wynik testowy', pct: 3, ai: true }));
       return;
     }
-    const files = { '/': 'index.html', '/article-flow.js': 'article-flow.js', '/auth-return.js': 'auth-return.js', '/guest-session.js': 'guest-session.js', '/logo.jpg': 'logo.jpg', '/favicon.png': 'favicon.png', '/manifest.webmanifest': 'manifest.webmanifest' };
+    const files = { '/': 'index.html', '/article-flow.js': 'article-flow.js', '/auth-return.js': 'auth-return.js', '/guest-session.js': 'guest-session.js', '/quota-view.js': 'quota-view.js', '/logo.jpg': 'logo.jpg', '/favicon.png': 'favicon.png', '/manifest.webmanifest': 'manifest.webmanifest' };
     const file = files[req.url];
     if (!file) { res.statusCode = 404; res.end(); return; }
     res.setHeader('Content-Type', file.endsWith('.js') ? 'text/javascript' : file.endsWith('.html') ? 'text/html; charset=utf-8' : file.endsWith('.jpg') ? 'image/jpeg' : 'application/octet-stream');
@@ -87,9 +93,11 @@ try {
   const edited = 'Sprawdzony i poprawiony tekst artykułu do analizy po zatwierdzeniu.';
   await evaluate(`document.getElementById('article-preview').value=${JSON.stringify(edited)};document.getElementById('article-confirm').click();document.getElementById('article-confirm').click()`);
   await waitFor(`location.hash === '#Article'`);
+  assert.equal(await evaluate(`document.getElementById('analysis-mode').textContent`),'Analiza AI');
+  assert.match(await evaluate(`document.querySelector('[aria-label="Sposób analizy"]').textContent`),/nie potwierdza jego prawdziwości/);
   assert.equal(calls.length, 2); assert.equal(calls[1].path, '/api/analyze'); assert.equal(calls[1].body.text, edited);
   console.log('PASS confirmation sends edited text exactly once and displays AI result');
-  await main(); await submit('https://example.com/cancel'); await waitFor(`Boolean(document.getElementById('article-preview'))`);
+  await main(); await waitFor(`document.getElementById('analysis-quota').textContent.includes('4 z 5')`); console.log('PASS remaining AI quota comes from server and updates after analysis'); await submit('https://example.com/cancel'); await waitFor(`Boolean(document.getElementById('article-preview'))`);
   const beforeCancel = calls.length;
   await evaluate(`document.getElementById('article-cancel').click()`); await delay(100);
   assert.equal(calls.length, beforeCancel);
@@ -108,6 +116,7 @@ try {
   analysisFails = true;
   await main(); await submit(edited); await waitFor(`location.hash === '#Article'`);
   assert.equal(await evaluate(`curArticle().ai`), false);
+  assert.equal(await evaluate(`document.getElementById('analysis-mode').textContent`),'Analiza lokalna');
   console.log('PASS manual AI failure preserves clearly labeled local fallback');
   await main(); await submit('https://example.com/ai-error'); await waitFor(`Boolean(document.getElementById('article-preview'))`);
   await evaluate(`document.getElementById('article-confirm').click()`);
@@ -139,9 +148,10 @@ try {
   await submit(edited); await waitFor(`location.hash === '#Article'`);
   assert.equal(await evaluate(`curArticle().ai`), false);
   assert.equal(await evaluate(`window.guestSignups`), 1);
+  await evaluate(`location.hash='Main';show('Main')`); await waitFor(`document.getElementById('analysis-quota').textContent.includes('0 z 2')`);
   console.log('PASS guest session reused; preview free; two AI analyses then local fallback');
   assert.equal(exceptions.length, 0, JSON.stringify(exceptions));
-  console.log('10 browser scenarios passed; no real OpenAI or Supabase requests.');
+  console.log('11 browser scenarios passed; no real OpenAI or Supabase requests.');
 } finally {
   socket?.close(); browser.kill('SIGTERM');
   await new Promise(resolve => { if (browser.exitCode !== null) resolve(); else browser.once('exit', resolve); });

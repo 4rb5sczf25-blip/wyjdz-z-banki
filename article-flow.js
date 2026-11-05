@@ -22,7 +22,7 @@ async function materialRequest(path, body) {
   } catch (error) {
     if (error.name === 'AbortError') throw new Error('Przekroczono czas oczekiwania. Spróbuj ponownie lub wklej tekst ręcznie.');
     throw error;
-  } finally { clearTimeout(timer); }
+  } finally { clearTimeout(timer); refreshAnalysisQuota(); }
 }
 function validMaterialAnalysis(d) {
   return d && Array.isArray(d.s) && d.s.length > 0 && d.s.length <= 12 &&

@@ -1,7 +1,7 @@
 import { HttpError } from './policy.js';
 
 // All budget decisions live in Postgres, never in instance-local memory.
-export async function authorize(req, kind, { fetcher = fetch, env = process.env } = {}) {
+export async function identify(req, { fetcher = fetch, env = process.env } = {}) {
   const token = /^Bearer ([A-Za-z0-9._-]+)$/.exec(req.headers.authorization || '')?.[1];
   if (!token || token.length > 8192) throw new HttpError(401, 'Zaloguj się, aby pobrać artykuł lub użyć analizy AI.');
   const base = env.SUPABASE_URL;
@@ -22,6 +22,10 @@ export async function authorize(req, kind, { fetcher = fetch, env = process.env 
   if (!/^[0-9a-f-]{36}$/i.test(user.id || '') || (user.is_anonymous !== true && !user.email_confirmed_at)) {
     throw new HttpError(401, 'Zaloguj się na potwierdzone konto e-mail.');
   }
+  return { user, url, key };
+}
+export async function authorize(req, kind, { fetcher = fetch, env = process.env } = {}) {
+  const { user, url, key } = await identify(req, { fetcher, env });
   let quota;
   try {
     quota = await fetcher(url + '/rest/v1/rpc/consume_analysis_quota_v2', {

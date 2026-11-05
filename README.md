@@ -66,3 +66,9 @@ Aplikacja obsługuje standardowy link Supabase (`{{ .ConfirmationURL }}`) oraz k
 W Supabase → Authentication → URL Configuration ustaw **Site URL** na adres aplikacji, a w **Redirect URLs** dodaj dokładny adres używanego wdrożenia Vercel z końcowym `/#Main` (np. `https://twoja-wersja.vercel.app/#Main`). Dla kolejnego adresu Preview trzeba dodać jego adres. Aplikacja wysyła `redirect_to` wskazujący aktualne wdrożenie. Jeżeli adres nie jest dozwolony, Supabase może wrócić do Site URL, gdzie również musi być wdrożona obsługa linków. Stare lub już użyte linki mogą wygasnąć; po zmianie ustawień poproś o nową wiadomość. Nie udostępniaj linków logowania, bo zawierają jednorazowe dane dostępu.
 
 Sesja gościa jest zachowywana w tej przeglądarce, również po odświeżeniu i odnowieniu tokenu. Postępy gościa pozostają lokalnie; po zalogowaniu mogą zostać zsynchronizowane z kontem. Limit 2 analiz dotyczy sesji gościnnej w Supabase — usunięcie danych przeglądarki pozwala utworzyć nową tożsamość. Nadal obowiązują limity tworzenia anonimowych kont Supabase i wspólny limit 100 analiz dziennie. Nie próbujemy identyfikować urządzenia przez fingerprinting.
+
+## Licznik i oznaczenie wyniku
+
+Ekran główny odczytuje pozostałe analizy z serwera (`GET /api/quota`), bez zużywania limitu i bez nowej migracji SQL. Licznik odświeża się po próbie analizy, po powrocie na ekran główny, aktywacji okna i zmianie dnia UTC. Pokazuje limit osobisty; nadal obowiązuje wspólny limit aplikacji i odstęp między analizami. Przy błędzie odczytu nie pokazuje wymyślonej liczby. Nieudane próby, którym serwer wcześniej przyznał limit, również zużywają limit.
+
+Wynik własnego tekstu ma etykietę „Analiza AI” lub „Analiza lokalna”. Przykłady są oznaczone „Materiał przykładowy”. Obok wyniku wyjaśniamy, że klasyfikacja może się mylić, a kategoria „fakt” nie jest weryfikacją prawdziwości.
