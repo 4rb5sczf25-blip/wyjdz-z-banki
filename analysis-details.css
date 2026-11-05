@@ -11,3 +11,5 @@
 .analysis-title p{margin:6px 0 0;font-size:12px;line-height:18px;color:#A9CBD4}
 
 [aria-label="Filtr oznaczeń w tekście"] button{background:rgba(207,230,236,.06)}
+
+.mark-tip{max-height:340px;overflow-y:auto;overscroll-behavior:contain}

@@ -11,7 +11,7 @@ const neutral = { id:1, checkable:true, opinion:false, emotion:0, voice:'none', 
 const text = 'Sejm przyjął ustawę o transporcie regionalnym.';
 function req(body = { text }, extra = {}) { return { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer test.jwt.token' }, body, ...extra }; }
 function res() { return { headers: {}, setHeader(k, v) { this.headers[k] = v; }, status(n) { this.code = n; return this; }, json(v) { this.body = v; return this; } }; }
-function modelResponse(sentences = [neutral]) { return { choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({ sentences }) } }] }; }
+function modelResponse(sentences = [neutral]) { return { choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({ sentences: Object.fromEntries(sentences.map(({id,...row})=>[String(id),row])) }) } }] }; }
 function setup(response = modelResponse()) {
   let calls = 0, options;
   const handler = analyzeHandler({ configured: () => true, access: async () => {}, clientFactory: () => ({ chat: { completions: { create: async o => { calls++; options = o; return response; } } } }) });
@@ -27,10 +27,10 @@ test('validates methods, body, text lengths before any AI call', async () => {
 test('AI has hard model/token budget, system instruction and structured response; no real API calls', async () => {
   const s = setup(); const r = res(); await s.handler(req(), r);
   assert.equal(r.code, 200); assert.deepEqual(r.body.s, [['fact', text]]); assert.equal(r.body.raw, text); assert.equal(r.body.ai, true);
-  const o = s.options(); assert.equal(o.model, 'gpt-4o-mini'); assert.equal(o.max_tokens, 1600); assert.equal(o.n, 1); assert.equal(o.response_format.json_schema.strict, true); assert.equal(o.messages[0].role, 'system'); assert.match(o.messages[0].content,/Cytat nie dowodzi/);assert.equal(JSON.parse(o.messages[1].content).fragments[0].id,1);assert.equal(r.body.analysisVersion,2);
+  const o = s.options(); assert.equal(o.model, 'gpt-4o-mini'); assert.equal(o.max_tokens, 1600); assert.equal(o.n, 1); assert.equal(o.response_format.json_schema.strict, true); assert.equal(o.messages[0].role, 'system'); assert.match(o.messages[0].content,/Cytat nie dowodzi/);assert.equal(JSON.parse(o.messages[1].content).fragments[0].id,1);assert.equal(r.body.analysisVersion,2);assert.deepEqual(o.response_format.json_schema.schema.properties.sentences.required,['1']);assert.equal(o.response_format.json_schema.schema.properties.sentences.additionalProperties,false);
 });
 test('rejects malformed, overlong, refused or truncated model output', async () => {
-  for (const rows of [[], Array(13).fill(neutral), [{...neutral,emotion:4}], [{...neutral,reason:'x'.repeat(121)}], [{...neutral,cue:'nie ma tego cytatu'}], [{...neutral,checkable:1}], [{...neutral,id:999}], [{...neutral,emotion:3,voice:'none'}]]) {
+  for (const rows of [[], Array.from({length:13},(_,i)=>({...neutral,id:i+1})), [{...neutral,emotion:4}], [{...neutral,reason:''}], [{...neutral,emotion:1,voice:'author',cue:'nie ma tego cytatu'}], [{...neutral,checkable:1}], [{...neutral,id:999}], [{...neutral,emotion:3,voice:'none'}]]) {
     assert.throws(() => validateAnalysis({ sentences: rows },sample), { status: 502 });
     const s = setup(modelResponse(rows)); const r = res(); await s.handler(req(), r); assert.equal(r.code, 502);
   }
@@ -91,4 +91,9 @@ test('API retains original fragments, separates title and attributed quote witho
  const decisions=selection.units.map(u=>({id:u.id,checkable:true,opinion:u.id===1,emotion:u.id===1?3:0,voice:u.id===1?'quoted':'none',cue:u.id===1?'skandal':'',reason:'Ocena języka.'}));
  const s=setup(modelResponse(decisions));const r=res();await s.handler(req({text:body,title:'Informacja o projekcie'}),r);
  assert.equal(r.code,200);assert.equal(s.count(),1);assert.equal(r.body.summary.authorPeak,0);assert.equal(r.body.summary.quotedEmotional,1);assert.equal(r.body.rows[0].kind,'title');assert.equal(r.body.s.length,selection.sampledFragments);
+});
+
+test('long explanation and redundant neutral attribution normalize without retrying OpenAI',async()=>{
+ const s=setup(modelResponse([{...neutral,voice:'author',reason:'Długie uzasadnienie. '.repeat(10)}]));const r=res();await s.handler(req(),r);
+ assert.equal(r.code,200);assert.equal(s.count(),1);assert.equal(r.body.rows[0].voice,'none');assert.ok(r.body.rows[0].reason.length<=120);
 });

@@ -66,6 +66,7 @@ function previewMaterial(data) {
     '<textarea id="article-preview" maxlength="12000" rows="10" style="width:100%;box-sizing:border-box;margin-top:8px;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.07);color:#E8F6F8;font:500 15px/22px Manrope,system-ui,sans-serif;resize:vertical"></textarea>' +
     '<p id="article-count" style="font-size:12px"></p><div id="article-error" role="status" aria-live="polite" style="color:#FFB0A4"></div>' +
     '<button id="article-confirm" type="button" style="'+MB+';width:100%;border:0;background:#5EE6D6;color:#04202B">Zatwierdź i analizuj AI</button>' +
+    '<button id="article-local" type="button" style="'+MB+';width:100%;margin-top:8px;border:1px solid rgba(94,230,214,.35);background:transparent;color:#7FF0E0">Analizuj lokalnie — bez AI</button>' +
     '<button id="article-login" type="button" style="'+MB+';width:100%;margin-top:8px;border:0;background:transparent;color:#7FF0E0">Zaloguj się / Utwórz konto</button>' +
     '<button id="article-cancel" type="button" style="'+MB+';width:100%;margin-top:8px;border:1px solid rgba(255,255,255,.28);background:transparent;color:#E8F6F8">Anuluj</button>', (card, dismiss) => {
       card.setAttribute('aria-labelledby', 'article-preview-title');
@@ -78,6 +79,12 @@ function previewMaterial(data) {
       const count = () => { card.querySelector('#article-count').textContent = field.value.length + ' / 12 000 znaków'; };
       field.addEventListener('input', count); count();
       let cancelled = false;
+      const local = card.querySelector('#article-local');
+      local.onclick = () => {
+        if (local.disabled || !card.isConnected || current !== 'Main') return;
+        try { const text = materialText(field.value); cancelled = true; dismiss(); showMaterialAnalysis(AnalysisMethod.analyzeLocal(text, data.title), text, data); }
+        catch (e) { error.textContent = e.message; }
+      };
       card.querySelector('#article-login').onclick = () => { cancelled = true; dismiss(); openAccount(); };
       card.querySelector('#article-cancel').onclick = () => { cancelled = true; dismiss(); };
       confirm.onclick = async () => {
@@ -86,7 +93,7 @@ function previewMaterial(data) {
         try { text = materialText(field.value); } catch (e) { error.textContent = e.message; field.focus(); return; }
         error.textContent = '';
         const restore = materialBusy(confirm, 'Analizujemy język tekstu…');
-        field.disabled = true;
+        field.disabled = true; local.disabled = true;
         try {
           const result = await materialRequest('/api/analyze', { text, title: data.title });
           if (!validMaterialAnalysis(result)) throw new Error('Otrzymano niepoprawną analizę. Spróbuj ponownie.');
@@ -95,7 +102,7 @@ function previewMaterial(data) {
           dismiss();
           showMaterialAnalysis({ ...result, ai: true }, text, data);
         } catch (e) { if (card.isConnected) error.textContent = e.message; }
-        finally { restore(); field.disabled = false; }
+        finally { restore(); field.disabled = false; local.disabled = false; }
       };
     });
   return close;

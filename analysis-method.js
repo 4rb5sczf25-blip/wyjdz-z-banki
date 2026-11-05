@@ -30,20 +30,44 @@
       method: 'evenly-spaced-v1'
     };
   }
+  function groundCue(text, raw) {
+    if (typeof raw !== 'string' || raw.length > 500) return null;
+    let cue = raw.trim();
+    const pairs = { '"':'"', "'":"'", '„':'”', '“':'”', '«':'»' };
+    if (!text.includes(cue) && pairs[cue[0]] && cue.at(-1) === pairs[cue[0]]) cue = cue.slice(1, -1).trim();
+    if (!cue) return '';
+    if (text.includes(cue)) return cue;
+    // Map collapsed whitespace back to the original literal span; never invent words.
+    let normalized = ''; const starts = [], ends = [];
+    for (let i = 0; i < text.length; i++) {
+      if (/\s/u.test(text[i])) {
+        if (normalized.endsWith(' ')) { ends[ends.length - 1] = i + 1; continue; }
+        normalized += ' '; starts.push(i); ends.push(i + 1);
+      } else { normalized += text[i]; starts.push(i); ends.push(i + 1); }
+    }
+    const wanted = cue.replace(/\s+/gu, ' '), index = normalized.indexOf(wanted);
+    return index < 0 ? null : text.slice(starts[index], ends[index + wanted.length - 1]);
+  }
   function validateRows(parsed, sample) {
+    const invalid = code => { const error = new Error(code); error.code = code; throw error; };
     const rows = parsed?.sentences;
-    if (!Array.isArray(rows) || rows.length !== sample.units.length) throw new Error('Model musi ocenić wszystkie wskazane fragmenty.');
+    if (!Array.isArray(rows) || rows.length !== sample.units.length) invalid('ROW_COUNT');
     const byId = new Map();
     for (const row of rows) {
       const unit = sample.units.find(u => u.id === row?.id);
-      if (!unit || byId.has(row.id) || typeof row.checkable !== 'boolean' || typeof row.opinion !== 'boolean' ||
-          !Number.isInteger(row.emotion) || row.emotion < 0 || row.emotion > 3 ||
-          !['none', 'author', 'quoted', 'uncertain'].includes(row.voice) ||
-          (row.emotion === 0 ? row.voice !== 'none' : row.voice === 'none') ||
-          typeof row.cue !== 'string' || row.cue.length > 60 || (row.emotion > 0 && !row.cue.trim()) ||
-          (row.cue && !unit.text.includes(row.cue)) ||
-          typeof row.reason !== 'string' || !row.reason.trim() || row.reason.length > 120) throw new Error('Niepoprawna ocena fragmentu.');
-      byId.set(row.id, { ...unit, checkable: row.checkable, opinion: row.opinion, emotion: row.emotion, voice: row.voice, cue: row.cue, reason: row.reason.trim() });
+      if (!unit || byId.has(row.id)) invalid('ROW_ID');
+      if (typeof row.checkable !== 'boolean' || typeof row.opinion !== 'boolean') invalid('ROW_FLAGS');
+      if (!Number.isInteger(row.emotion) || row.emotion < 0 || row.emotion > 3) invalid('ROW_INTENSITY');
+      if (!['none', 'author', 'quoted', 'uncertain'].includes(row.voice)) invalid('ROW_VOICE');
+      if (typeof row.reason !== 'string' || !row.reason.trim()) invalid('ROW_REASON');
+      if (typeof row.cue !== 'string') invalid('ROW_CUE_TYPE');
+      const literal = groundCue(unit.text, row.cue);
+      if (row.emotion > 0 && (!literal || literal.length > MAX_UNIT)) invalid('ROW_CUE_MISMATCH');
+      const cue = literal || '';
+      // These changes affect display only, never intensity or factual/opinion flags.
+      const voice = row.emotion === 0 ? 'none' : row.voice === 'none' ? 'uncertain' : row.voice;
+      const reason = row.reason.trim().length > 120 ? row.reason.trim().slice(0, 119) + '…' : row.reason.trim();
+      byId.set(row.id, { ...unit, checkable: row.checkable, opinion: row.opinion, emotion: row.emotion, voice, cue, reason });
     }
     return sample.units.map(unit => byId.get(unit.id));
   }

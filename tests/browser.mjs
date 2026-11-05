@@ -224,8 +224,14 @@ if(String(input).includes('.supabase.co/auth/v1/signup')){window.guestSignups++;
   await evaluate(`stage.firstElementChild.querySelector('.mark').click()`);
   assert.match(await evaluate(`document.getElementById('mark-tip-body').innerText`),/Wskazany fragment/);
   console.log('PASS overlapping labels, strong emotion despite neutral scaffolding, neutral claim styling and grounded explanation');
+  await main();
+  await submit('https://example.com/local-choice');await waitFor(`Boolean(document.getElementById('article-local'))`);
+  const paidBeforeLocal=calls.filter(c=>c.path==='/api/analyze').length;
+  await evaluate(`document.getElementById('article-local').click()`);await waitFor(`location.hash==='#Article'`);
+  assert.equal(await evaluate(`curArticle().ai`),false);assert.equal(calls.filter(c=>c.path==='/api/analyze').length,paidBeforeLocal);
+  console.log('PASS explicit local preview action never calls paid analysis endpoint');
   assert.equal(exceptions.length, 0, JSON.stringify(exceptions));
-  console.log('16 browser scenarios passed; no real OpenAI or Supabase requests.');
+  console.log('17 browser scenarios passed; no real OpenAI or Supabase requests.');
 } finally {
   socket?.close(); browser.kill('SIGTERM');
   await new Promise(resolve => { if (browser.exitCode !== null) resolve(); else browser.once('exit', resolve); });

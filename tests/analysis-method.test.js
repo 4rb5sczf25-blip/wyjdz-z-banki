@@ -27,3 +27,14 @@ test('local fallback exposes mixed labels and uncertainty about quoted speech wi
   assert.equal(r.analysisVersion,2);assert.equal(r.ai,false);assert.equal(r.rows[0].checkable,true);assert.equal(r.rows[0].opinion,true);assert.equal(r.rows[0].emotion,3);
   assert.ok(r.rows.some(row=>row.voice==='uncertain'));assert.equal(r.summary.authorPeak,3);
 });
+
+test('format normalization preserves literal source evidence and never invents an author',()=>{
+ const sample=M.sampleText('To jest bardzo\u00a0\u00a0poważny skandal w mieście.');
+ const row={id:1,checkable:false,opinion:true,emotion:3,voice:'none',cue:'„poważny skandal”',reason:'Uzasadnienie. '.repeat(20)};
+ const result=M.validateRows({sentences:[row]},sample)[0];
+ assert.equal(result.cue,'poważny skandal');assert.equal(result.voice,'uncertain');assert.ok(result.reason.length<=120);
+ const whitespace=M.validateRows({sentences:[{...row,cue:'bardzo poważny skandal'}]},sample)[0];
+ assert.equal(whitespace.cue,'bardzo\u00a0\u00a0poważny skandal');assert.ok(sample.units[0].text.includes(whitespace.cue));
+ assert.throws(()=>M.validateRows({sentences:[{...row,cue:'wymyślony skandal'}]},sample),{code:'ROW_CUE_MISMATCH'});
+ assert.throws(()=>M.validateRows({sentences:[]},sample),{code:'ROW_COUNT'});
+});

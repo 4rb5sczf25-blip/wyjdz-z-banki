@@ -15,3 +15,9 @@ Próbka jest wybierana przez kod, równomiernie po pozycjach. Model otrzymuje ws
 5. Sprawdzić dłuższe artykuły z pominiętymi mocnymi fragmentami i opisać utratę kontekstu. Bez takiej oceny nie obiecywać pomiaru całej publikacji ani neutralności politycznej.
 
 Limity kosztów i zabezpieczenia URL bez zmian. Nie wykonano rzeczywistych wywołań OpenAI podczas implementacji. Metoda jest na gałęzi testowej; stare procenty porównania fikcyjnych mediów pozostają jawnie oznaczoną makietą.
+
+## Obsługa formatu odpowiedzi
+
+Odpowiedź modelu jest obiektem z wymaganym kluczem dla każdego wskazanego ID, co ogranicza pomijanie fragmentów. Kod nadal sprawdza kompletność i poprawność typów. Drobne różnice prezentacyjne nie muszą kończyć całej analizy błędem: uzasadnienia są skracane do 120 znaków, zewnętrzne cudzysłowy i różnice białych znaków w cytacie są dopasowywane do dosłownego fragmentu źródła. Model proszony jest o cue do 60 znaków; dłuższy cytat może zostać zachowany tylko wtedy, gdy jest dosłownym fragmentem jednostki (maksymalnie 300 znaków). Nie wymyślamy cytatów. Przy dodatniej intensywności i voice=none stosujemy uncertain, nie author; przy zerowej intensywności voice nie ma zastosowania i jest none. Brakujące ID, niewłaściwe typy, intensywność poza 0–3 oraz nieobecne w tekście dowody nacechowania nadal są odrzucane.
+
+W razie odrzucenia log zawiera wyłącznie kod walidacji, bez tekstu artykułu i odpowiedzi modelu. Nie wykonujemy automatycznych ponowień. Podgląd ma osobny przycisk „Analizuj lokalnie — bez AI”, który nie wywołuje endpointu płatnej analizy. Testy tej obsługi korzystają z atrap; bez rzeczywistej odpowiedzi modelu nie można stwierdzić, które pole spowodowało wcześniejszy ogólny komunikat.
