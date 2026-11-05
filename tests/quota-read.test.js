@@ -8,7 +8,7 @@ for (const [guest, used, remaining] of [[true,0,2],[true,1,1],[true,2,0],[false,
     const handler = makeHandler({ identity: async () => ({ user: {...user,is_anonymous:guest}, url:'https://example.supabase.co',key:'test' }), now: () => new Date('2026-11-05T10:00:00Z'), fetcher: async (url, options) => {
       const parsed=new URL(url); assert.equal(parsed.searchParams.get('subject'),'eq.'+user.id); assert.equal(parsed.searchParams.get('day'),'eq.2026-11-05'); assert.equal(options.method,undefined); return {ok:true,json:async()=>used?[{used}]:[]};
     }});
-    const r=response();await handler({method:'GET'},r);assert.equal(r.code,200);assert.equal(r.body.remaining,remaining);assert.equal(r.body.limit,guest?2:5);
+    const r=response();await handler({method:'GET'},r);assert.equal(r.code,200);assert.equal(r.body.remaining,remaining);assert.equal(r.body.limit,guest?2:5);assert.equal(r.body.serverTime,'2026-11-05T10:00:00.000Z');assert.equal(r.body.resetsAt,'2026-11-06T00:00:00.000Z');
   });
 }
 test('quota reads reject writes and never fabricate a count on database failure', async () => {

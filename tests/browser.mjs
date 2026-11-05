@@ -34,7 +34,7 @@ const server = http.createServer(async (req, res) => {
         : { ...globalThis.AnalysisMethod.analyzeLocal(body.text,body.title), ai: true }));
       return;
     }
-    const files = { '/': 'index.html', '/article-flow.js': 'article-flow.js', '/auth-return.js': 'auth-return.js', '/guest-session.js': 'guest-session.js', '/quota-view.js': 'quota-view.js', '/profile.js': 'profile.js', '/privacy-config.js': 'privacy-config.js', '/privacy.js': 'privacy.js', '/transparency.js': 'transparency.js', '/visual-polish.js': 'visual-polish.js', '/visual-polish.css': 'visual-polish.css', '/analysis-method.js': 'analysis-method.js', '/analysis-details.js': 'analysis-details.js', '/analysis-details.css': 'analysis-details.css', '/logo.jpg': 'logo.jpg', '/favicon.png': 'favicon.png', '/manifest.webmanifest': 'manifest.webmanifest' };
+    const files = { '/account-session.js': 'account-session.js', '/account-data.js': 'account-data.js', '/': 'index.html', '/article-flow.js': 'article-flow.js', '/auth-return.js': 'auth-return.js', '/guest-session.js': 'guest-session.js', '/quota-view.js': 'quota-view.js', '/profile.js': 'profile.js', '/privacy-config.js': 'privacy-config.js', '/privacy.js': 'privacy.js', '/transparency.js': 'transparency.js', '/visual-polish.js': 'visual-polish.js', '/visual-polish.css': 'visual-polish.css', '/analysis-method.js': 'analysis-method.js', '/analysis-details.js': 'analysis-details.js', '/analysis-details.css': 'analysis-details.css', '/logo.jpg': 'logo.jpg', '/favicon.png': 'favicon.png', '/manifest.webmanifest': 'manifest.webmanifest' };
     const file = files[req.url];
     if (!file) { res.statusCode = 404; res.end(); return; }
     res.setHeader('Content-Type', file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.html') ? 'text/html; charset=utf-8' : file.endsWith('.jpg') ? 'image/jpeg' : 'application/octet-stream');
@@ -80,7 +80,7 @@ if(String(input).includes('.supabase.co/auth/v1/user')&&options?.method==='PUT')
 if(String(input).includes('.supabase.co/auth/v1/otp')){window.profileRequests.push(JSON.parse(options.body));return new Response('{}',{status:200,headers:{'Content-Type':'application/json'}})}
 if(String(input).includes('.supabase.co/auth/v1/signup')){window.guestSignups++;return new Response(JSON.stringify({access_token:'guest.jwt.token',refresh_token:'guest-refresh',expires_in:3600,user:{id:'guest-user',is_anonymous:true}}),{status:200,headers:{'Content-Type':'application/json'}})}return originalFetch(input,options)};localStorage.setItem('wzb-onboarded','1');localStorage.setItem('wzb-prefs',JSON.stringify({motion:false,sound:false,splash:false}));` });
   const main = async () => {
-    await evaluate(`document.querySelectorAll('.ob-back').forEach(e=>e.remove());location.hash='Main';show('Main');PREFS.motion=false;PREFS.sound=false;localStorage.setItem('wzb-session',JSON.stringify({at:'test.jwt.token',rt:'test',uid:'test-user',exp:Date.now()+3600000}));`);
+    await evaluate(`document.querySelectorAll('.ob-back').forEach(e=>e.remove());location.hash='Main';show('Main');PREFS.motion=false;PREFS.sound=false;sbStore({at:'test.jwt.token',rt:'test',uid:'test-user',exp:Date.now()+3600000});`);
     await waitFor(`Boolean(document.getElementById('link'))`);
   };
   const submit = value => evaluate(`document.getElementById('link').value=${JSON.stringify(value)};document.querySelector('.analyze-btn').click()`);
@@ -269,8 +269,37 @@ if(String(input).includes('.supabase.co/auth/v1/signup')){window.guestSignups++;
   assert.equal(await evaluate(`JSON.stringify(curArticle().summary)`),beforeTitle);
   assert.equal(calls.filter(c=>c.path==='/api/analyze').length,beforeTitleCalls);
   console.log('PASS assessed headline opens grounded explanation without altering body statistics or calling AI');
+  await evaluate(`document.querySelectorAll('.ob-back').forEach(e=>e.remove());show('Main');location.hash='Main';PREFS.motion=false;
+window.accountRows={};window.feedbackFails=true;const transport=window.fetch;window.fetch=async(input,options={})=>{
+ const url=String(input);if(url.includes('.supabase.co/rest/v1/user_data')){const key=options.headers.Authorization;const row=window.accountRows[key];if(options.method==='GET')return Response.json(row?[row]:[]);const body=JSON.parse(options.body);if(options.method==='PATCH'&&new URL(url).searchParams.get('updated_at')!=='eq.'+row.updated_at)return Response.json([]);window.accountRows[key]={...row,...body};return Response.json([window.accountRows[key]])}
+ if(url.includes('.supabase.co/rest/v1/feedback'))return window.feedbackFails?Response.json({message:'denied'},{status:403}):new Response(null,{status:201});return transport(input,options)};
+sbStore({uid:'account-A',at:'A',rt:'A',exp:Date.now()+3600000});accountWrite('wzb-saved',[0,1]);window.firstSync=syncNow()`);
+  assert.equal(await evaluate(`window.firstSync`),true);
+  await evaluate(`openAccount();document.getElementById('acOut').click()`);
+  assert.equal(await evaluate(`sbSession()`),null);assert.equal(await evaluate(`NEWS.length`),3);assert.equal(await evaluate(`Boolean(document.querySelector('.app-modal:not([data-closed])'))`),false);assert.deepEqual(await evaluate(`getSaved()`),[]);
+  await evaluate(`sbStore({uid:'account-B',at:'B',rt:'B',exp:Date.now()+3600000});accountWrite('wzb-saved',[2]);true`);
+  assert.deepEqual(await evaluate(`getSaved()`),[2]);
+  await evaluate(`sbStore({uid:'account-A',at:'A',rt:'A',exp:Date.now()+3600000});toggleSaved(0);window.deletionSync=syncNow()`);
+  assert.equal(await evaluate(`window.deletionSync`),true);
+  assert.deepEqual(await evaluate(`window.accountRows['Bearer A'].data['wzb-saved']`),[1]);
+  console.log('PASS real account logout/switch isolates local progress and saved deletion reaches mocked cloud');
+  await evaluate(`openFeedback();document.querySelector('[data-star="5"]').click();document.getElementById('fbText').value='Treść zachowana przy błędzie';document.getElementById('fbSend').click()`);
+  await waitFor(`document.getElementById('fbSend')?.textContent==='Spróbuj ponownie'`);
+  assert.equal(await evaluate(`document.getElementById('fbText').value`),'Treść zachowana przy błędzie');
+  await evaluate(`window.feedbackFails=false;document.getElementById('fbSend').click()`);
+  await waitFor(`!document.getElementById('fbText')`);
+  console.log('PASS feedback failure preserves form; confirmed retry closes it without email/share fallback');
+  await evaluate(`window.lateResult='pending';const previousFetch=window.fetch;window.fetch=(input,options)=>String(input)==='/api/analyze'?new Promise(resolve=>window.finishLate=()=>resolve(Response.json({late:true}))):previousFetch(input,options);materialRequest('/api/analyze',{text:'Test bez wywołania modelu.'}).then(()=>window.lateResult='applied',error=>window.lateResult=error.code);true`);
+  await waitFor(`typeof window.finishLate==='function'`);
+  await evaluate(`sbStore(null);window.finishLate()`);await waitFor(`window.lateResult!=='pending'`);
+  assert.equal(await evaluate(`window.lateResult`),'session_changed');
+  console.log('PASS late AI response is discarded after logout');
+  await evaluate(`sbStore({uid:'account-A',at:'A',rt:'A',exp:Date.now()+3600000});true`);
+  await command('Page.reload');await waitFor(`typeof getSaved==='function' && typeof current!=='undefined' && Boolean(stage.firstElementChild)`);
+  assert.deepEqual(await evaluate(`getSaved()`),[1]);assert.equal(await evaluate(`sbSession().uid`),'account-A');
+  console.log('PASS reload restores only the active account cache');
   assert.equal(exceptions.length, 0, JSON.stringify(exceptions));
-  console.log('22 browser scenarios passed; no real OpenAI or Supabase requests.');
+  console.log('26 browser scenarios passed; no real OpenAI or Supabase requests.');
 } finally {
   socket?.close(); browser.kill('SIGTERM');
   await new Promise(resolve => { if (browser.exitCode !== null) resolve(); else browser.once('exit', resolve); });

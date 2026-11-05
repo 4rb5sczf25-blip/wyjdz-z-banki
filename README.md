@@ -116,3 +116,7 @@ Głośność efektów obniżono przez SOUND_GAIN=.14. Kliknięcia reagują na po
 Efekt wody i bąbelków jest ponownie dostępny przy wejściu z ekranu powitalnego (przycisk gościa oraz logowanie kodem). Nie wyświetla ponownie ekranu logowania użytkownikom z zapamiętaną sesją. Pomija efekt przy ograniczeniu ruchu i usuwa płótno po zakończeniu; samouczek nie przykrywa animacji.
 
 Nagłówki z osobną oceną są klikalne na ekranie artykułu i otwierają ten sam przewijany panel wyjaśnień z kolorowymi kategoriami i dosłownym cytatem. Otwarcie panelu nie wywołuje AI i nie zmienia statystyk treści. Fikcyjne nagłówki mają osobną, oznaczoną ocenę reguł lokalnych. Gdy dla ręcznie wklejonego tekstu nie podano osobnego tytułu, aplikacja nie udaje, że nagłówek został oceniony.
+
+## Stabilność kont po audycie
+
+Opis rozdzielenia danych kont, migracji starych zapisów, synchronizacji usunięć i testów: [docs/account-stability.md](docs/account-stability.md). Ta zmiana nie wymaga nowej migracji SQL.

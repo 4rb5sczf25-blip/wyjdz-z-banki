@@ -9,20 +9,24 @@ function materialText(raw) {
 async function materialRequest(path, body) {
   const token = await ensureGuestSession();
   if (!token) throw new Error('Zaloguj się w Ustawieniach, aby pobrać artykuł lub użyć analizy AI.');
+  const version = sessionVersion();
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 28000);
+  accountRequests.add(controller);
+  const timer = setTimeout(() => controller.abort(new DOMException('Timeout', 'TimeoutError')), 28000);
   try {
     const response = await fetch(path, {
       method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
       body: JSON.stringify(body), signal: controller.signal
     });
     const data = await response.json();
+    requireSessionVersion(version);
     if (!response.ok) { const error = new Error(data.error || 'Nie udało się wykonać operacji. Spróbuj ponownie.'); error.status = response.status; throw error; }
     return data;
   } catch (error) {
-    if (error.name === 'AbortError') throw new Error('Przekroczono czas oczekiwania. Spróbuj ponownie lub wklej tekst ręcznie.');
+    requireSessionVersion(version);
+    if (controller.signal.reason?.name === 'TimeoutError') throw new Error('Przekroczono czas oczekiwania. Spróbuj ponownie lub wklej tekst ręcznie.');
     throw error;
-  } finally { clearTimeout(timer); refreshAnalysisQuota(); }
+  } finally { clearTimeout(timer); accountRequests.delete(controller); refreshAnalysisQuota(); }
 }
 function validMaterialAnalysis(d) {
   try {
@@ -134,6 +138,7 @@ async function analyzeOwnMaterial(event, say) {
         if (!validMaterialAnalysis(result)) throw new Error('Niepoprawna odpowiedź AI.');
         result.ai = true;
       } catch (error) {
+        if (error.code === 'session_changed') throw error;
         // Preserve the existing manual-text fallback and clearly identify it.
         result = analyzeText(text);
         if (current === 'Main' && button.isConnected) showToast(error.message + ' Uruchomiono analizę lokalną.');

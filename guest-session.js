@@ -2,16 +2,20 @@
 let guestRequest = null;
 function isGuestSession(session = sbSession()) { return Boolean(session && session.anonymous); }
 async function ensureGuestSession() {
+  const version = sessionVersion();
   const existing = await sbToken();
+  requireSessionVersion(version);
   if (existing) return existing;
   if (sbSession()) throw new Error('Nie udało się odnowić sesji. Spróbuj ponownie lub zaloguj się.');
   if (!guestRequest) guestRequest = (async () => {
     try {
       const data = await sbReq('/auth/v1/signup', { method: 'POST', body: { data: {} } });
+      requireSessionVersion(version);
       if (!data?.access_token || !data.refresh_token || !data.user?.id || data.user.is_anonymous !== true) throw new Error('guest_disabled');
       sbStore(sbFromAuth(data));
       return data.access_token;
     } catch (error) {
+      if (error.code === 'session_changed') throw error;
       if (error.status === 429) throw new Error('Za dużo prób wejścia jako gość. Poczekaj chwilę. Analiza lokalna nadal działa.');
       throw new Error('Tryb gościa AI jest chwilowo niedostępny. Możesz korzystać z przykładów i analizy lokalnej.');
     } finally { guestRequest = null; }

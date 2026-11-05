@@ -22,9 +22,11 @@ async function finishAuthReturn() {
     showToast('Link do logowania jest niepoprawny lub wygasł. Poproś o nową wiadomość w Ustawieniach → Konto.');
     return;
   }
+  const version = sessionVersion();
   try {
     // Verify the token with Supabase; never trust user identity from URL parameters.
     const user = await sbReq('/auth/v1/user', { token: access });
+    requireSessionVersion(version);
     if (!user || typeof user.id !== 'string' || !user.id || !user.email_confirmed_at) throw new Error('invalid');
     sbStore({ at: access, rt: refresh, exp: Date.now() + Math.min(expires, 86400) * 1000, uid: user.id, email: user.email || '', anonymous: false, displayName: profileName(user.user_metadata?.display_name) });
     showToast('Zalogowano przez link z e-maila.');
