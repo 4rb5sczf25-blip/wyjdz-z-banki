@@ -43,3 +43,10 @@ test('local opinion exposes a literal marker and explains opinion rather than cl
  const r=M.analyzeLocal('Zdaniem części ekspertów ta kwota może jednak nie wystarczyć na trwałą poprawę sytuacji.');
  assert.equal(r.rows[0].opinion,true);assert.equal(r.rows[0].cue,'Zdaniem');assert.match(r.rows[0].reason,/opiniujące/);
 });
+
+test('capitalised institutional names and acronyms are not emotion evidence on their own',()=>{
+ for(const text of ['SEJM przyjął projekt dotyczący finansowania NATO.','UNESCO opublikowało raport.','Rząd przekazał dane do OECD.']){
+  const row=M.analyzeLocal(text).rows[0];assert.equal(row.emotion,0);assert.equal(row.voice,'none');assert.equal(row.cue,'');
+ }
+ assert.equal(M.analyzeLocal('To SKANDAL!').rows[0].emotion,3);
+});

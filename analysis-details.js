@@ -6,8 +6,9 @@ function analysisView(article) {
   return {
     hasClickableTitle: Boolean(title), untitledAnalysis: article.analysisVersion===2&&!title,
     head: title ? [{text:title.text,css:title.emotion>0?NEWS_MARK.emotion:title.opinion?NEWS_MARK.opinion:''}] : newsHead(article),
-    intensitySteps: [1,2,3].map(level=>({active:summary.peak>=level?'true':'false',color:summary.peak>=level?['#F2C94C','#FFAA7A','#FF7A66'][level-1]:'rgba(255,255,255,.12)'})),
+    intensitySteps: [1,2,3].map(level=>({active:summary.peak>=level?'true':'false',color:summary.peak>=level?['#F2C94C','#FFAA7A','#FF7A66'][level-1]:'var(--line)'})),
     detailedAnalysis: article.analysisVersion === 2, legacyResult: article.analysisVersion !== 2,
+    peakLevel: summary.peak,
     peakColor: ['#CFE6EC','#F5D874','#FFAA7A','#FFB0A4'][summary.peak],
     samplingShort: sample ? 'Zakres: '+summary.analyzed+' z '+sample.totalFragments+' fragmentów przesłanego tekstu.' : '',
     coverageLabel: 'Język emocjonalny: ' + summary.emotional + ' z ' + summary.analyzed + ' fragmentów',

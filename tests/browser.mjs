@@ -34,7 +34,7 @@ const server = http.createServer(async (req, res) => {
         : { ...globalThis.AnalysisMethod.analyzeLocal(body.text,body.title), ai: true }));
       return;
     }
-    const files = { '/account-session.js': 'account-session.js', '/account-data.js': 'account-data.js', '/': 'index.html', '/article-flow.js': 'article-flow.js', '/auth-return.js': 'auth-return.js', '/guest-session.js': 'guest-session.js', '/quota-view.js': 'quota-view.js', '/profile.js': 'profile.js', '/privacy-config.js': 'privacy-config.js', '/privacy.js': 'privacy.js', '/transparency.js': 'transparency.js', '/visual-polish.js': 'visual-polish.js', '/visual-polish.css': 'visual-polish.css', '/analysis-method.js': 'analysis-method.js', '/analysis-details.js': 'analysis-details.js', '/analysis-details.css': 'analysis-details.css', '/logo.jpg': 'logo.jpg', '/favicon.png': 'favicon.png', '/manifest.webmanifest': 'manifest.webmanifest' };
+    const files = { '/modal.js':'modal.js','/app-layout.js':'app-layout.js','/app-entry.js':'app-entry.js','/app-design.css':'app-design.css', '/account-session.js': 'account-session.js', '/account-data.js': 'account-data.js', '/': 'index.html', '/article-flow.js': 'article-flow.js', '/auth-return.js': 'auth-return.js', '/guest-session.js': 'guest-session.js', '/quota-view.js': 'quota-view.js', '/profile.js': 'profile.js', '/privacy-config.js': 'privacy-config.js', '/privacy.js': 'privacy.js', '/transparency.js': 'transparency.js', '/visual-polish.js': 'visual-polish.js', '/visual-polish.css': 'visual-polish.css', '/analysis-method.js': 'analysis-method.js', '/analysis-details.js': 'analysis-details.js', '/analysis-details.css': 'analysis-details.css', '/logo.jpg': 'logo.jpg', '/favicon.png': 'favicon.png', '/manifest.webmanifest': 'manifest.webmanifest' };
     const file = files[req.url];
     if (!file) { res.statusCode = 404; res.end(); return; }
     res.setHeader('Content-Type', file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.html') ? 'text/html; charset=utf-8' : file.endsWith('.jpg') ? 'image/jpeg' : 'application/octet-stream');
@@ -171,7 +171,7 @@ if(String(input).includes('.supabase.co/auth/v1/signup')){window.guestSignups++;
   await evaluate(`document.getElementById('acProfileName').value='';document.getElementById('acSaveName').click()`);
   await waitFor(`sbSession().displayName===''`);
   await evaluate(`document.querySelector('#acBody [data-x]').click();sbStore(null);openAccount()`);
-  await evaluate(`document.getElementById('acPrivacy').click()`);
+  await evaluate(`document.getElementById('acPrivacy').focus();document.getElementById('acPrivacy').click()`);
   assert.match(await evaluate(`document.querySelector('[aria-labelledby="privacy-title"]').innerText`),/Fundacja Prześwit/);
   assert.match(await evaluate(`document.querySelector('[aria-labelledby="privacy-title"]').innerText`),/prywatnosc@wyjdzzbanki.pl/);
   assert.match(await evaluate(`document.querySelector('[aria-labelledby="privacy-title"]').innerText`),/Wersja robocza/);
@@ -256,7 +256,12 @@ if(String(input).includes('.supabase.co/auth/v1/signup')){window.guestSignups++;
   await waitFor(`Boolean(document.querySelector('.entry-dive-canvas'))`);
   await waitFor(`current==='Main' && !document.querySelector('.entry-dive-canvas')`);
   assert.equal(await evaluate(`Boolean(stage.firstElementChild.inert)`),false);
-  console.log('PASS restored water-and-bubbles entry reaches Main and cleans up the canvas');
+  console.log('PASS short entry reaches Main and cleans up its overlay');
+  await evaluate(`show('Splash');window.skipEntry=playEntryDive(document.getElementById('start-guest'));document.querySelector('.entry-skip').click()`);
+  assert.equal(await evaluate(`window.skipEntry`),true);assert.equal(await evaluate(`Boolean(document.querySelector('.entry-dive-canvas'))`),false);
+  await evaluate(`show('Splash');window.cancelEntry=playEntryDive(document.getElementById('start-guest'));setPref('motion',false)`);
+  assert.equal(await evaluate(`window.cancelEntry`),true);assert.equal(await evaluate(`current`),'Main');
+  console.log('PASS entry can be skipped and turning motion off finishes immediately without blocking the screen');
   await evaluate(`document.querySelectorAll('.ob-back').forEach(e=>e.remove());setPref('motion',false);const pick=NEWS.slice(0,3).flatMap((ev,evIndex)=>ev.articles.map(a=>({evIndex,a}))).find(item=>item.a.rows.some(row=>row.kind==='title'&&row.opinion&&row.cue));select({ev:pick.evIndex,src:pick.a.id,from:'Compare'});location.hash='Article';show('Article')`);
   const beforeTitle=await evaluate(`JSON.stringify(curArticle().summary)`);
   const titleCue=await evaluate(`curArticle().rows.find(row=>row.kind==='title').cue`);
@@ -298,8 +303,66 @@ sbStore({uid:'account-A',at:'A',rt:'A',exp:Date.now()+3600000});accountWrite('wz
   await command('Page.reload');await waitFor(`typeof getSaved==='function' && typeof current!=='undefined' && Boolean(stage.firstElementChild)`);
   assert.deepEqual(await evaluate(`getSaved()`),[1]);assert.equal(await evaluate(`sbSession().uid`),'account-A');
   console.log('PASS reload restores only the active account cache');
+  await command('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:false});
+  await evaluate(`setPref('motion',false);show('Main');openAccount()`);
+  assert.equal(await evaluate(`stage.firstElementChild.inert`),true);
+  assert.equal(await evaluate(`Boolean(document.querySelector('.app-modal').getAttribute('aria-labelledby'))`),true);
+  await evaluate(`document.getElementById('acPrivacy').focus();document.getElementById('acPrivacy').click()`);
+  assert.equal(await evaluate(`modalStack.length`),2);
+  await command('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape'});
+  await command('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape'});
+  assert.equal(await evaluate(`modalStack.length`),1);
+  assert.equal(await evaluate(`document.activeElement.id`),'acPrivacy');
+  await evaluate(`modalTargets(modalTop().card).at(-1).focus()`);
+  await command('Input.dispatchKeyEvent',{type:'keyDown',key:'Tab',code:'Tab'});
+  await command('Input.dispatchKeyEvent',{type:'keyUp',key:'Tab',code:'Tab'});
+  assert.equal(await evaluate(`document.activeElement===modalTargets(modalTop().card)[0]`),true);
+  await command('Input.dispatchKeyEvent',{type:'keyDown',key:'Tab',code:'Tab',modifiers:8});
+  await command('Input.dispatchKeyEvent',{type:'keyUp',key:'Tab',code:'Tab',modifiers:8});
+  assert.equal(await evaluate(`document.activeElement===modalTargets(modalTop().card).at(-1)`),true);
+  await evaluate(`modalTop().card.closeModal()`);assert.equal(await evaluate(`stage.firstElementChild.inert`),false);
+  console.log('PASS nested dialogs trap keyboard focus, Escape closes only top, focus returns and background unlocks');
+  await evaluate(`openPrivacy()`);
+  await command('Emulation.setDeviceMetricsOverride',{width:320,height:360,deviceScaleFactor:1,mobile:false});
+  await evaluate(`fitAppLayout()`);
+  const dialogBounds=await evaluate(`(()=>{const card=document.querySelector('.app-modal'),body=card.querySelector('.modal-body'),close=card.querySelector('.modal-footer button');return{scroll:body.scrollHeight>body.clientHeight,bottom:close.getBoundingClientRect().bottom,height:innerHeight,width:card.getBoundingClientRect().width}})()`);
+  assert.equal(dialogBounds.scroll,true);assert.ok(dialogBounds.bottom<=dialogBounds.height);assert.ok(dialogBounds.width<=320);
+  await evaluate(`modalTop().card.closeModal()`);
+  console.log('PASS long privacy dialog scrolls with visible close control at 320 × 360 keyboard-sized viewport');
+  for(const [width,height] of [[320,568],[390,844],[1280,900],[1440,900]]){
+    await command('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});
+    for(const name of ['Main','Compare','Article','Sources','Learn','Settings','Splash','Quiz','QuizFeedback','Report','Achievements','Compendium','Sheet']){
+      await evaluate(`fitAppLayout();show(${JSON.stringify(name)})`);
+      const layout=await evaluate(`(()=>{const s=stage.firstElementChild,c=s.querySelector('.screen-content')||s;return{stage:stage.getBoundingClientRect().width,screen:s.getBoundingClientRect().width,overflow:c.scrollWidth-c.clientWidth,transform:getComputedStyle(stage).transform}})()`);
+      assert.ok(Math.abs(layout.stage-layout.screen)<3,JSON.stringify({width,name,layout}));
+      assert.ok(layout.overflow<=2,JSON.stringify({width,name,layout}));assert.equal(layout.transform,'none');
+      if(name==='Sheet'){assert.equal(await evaluate(`Boolean(modalTop())`),true);await evaluate(`modalTop().card.closeModal()`);}
+    }
+    await evaluate(`show('Settings')`);
+    if(process.env.WZB_SCREENSHOTS){const {data}=await command('Page.captureScreenshot',{format:'png'});await import('node:fs/promises').then(fs=>fs.writeFile(process.env.WZB_SCREENSHOTS+'/settings-'+width+'.png',Buffer.from(data,'base64')));}
+  }
+  console.log('PASS all thirteen screens fit mobile and desktop widths without scaled text or horizontal overflow');
+  await command('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:false});
+  await evaluate(`fitAppLayout();show('Main')`);
+  if(process.env.WZB_SCREENSHOTS){const {data}=await command('Page.captureScreenshot',{format:'png'});await import('node:fs/promises').then(fs=>fs.writeFile(process.env.WZB_SCREENSHOTS+'/main-mobile.png',Buffer.from(data,'base64')));}
+  await evaluate(`show('Article')`);
+  if(process.env.WZB_SCREENSHOTS){const {data}=await command('Page.captureScreenshot',{format:'png'});await import('node:fs/promises').then(fs=>fs.writeFile(process.env.WZB_SCREENSHOTS+'/article-mobile.png',Buffer.from(data,'base64')));}
+  await evaluate(`openPrivacy()`);
+  if(process.env.WZB_SCREENSHOTS){const {data}=await command('Page.captureScreenshot',{format:'png'});await import('node:fs/promises').then(fs=>fs.writeFile(process.env.WZB_SCREENSHOTS+'/modal-mobile.png',Buffer.from(data,'base64')));}
+  await evaluate(`modalTop().card.closeModal()`);
+  await command('Emulation.setDeviceMetricsOverride',{width:1440,height:900,deviceScaleFactor:1,mobile:false});
+  await evaluate(`fitAppLayout();setPref('light',true);show('Article')`);
+  assert.equal(await evaluate(`getComputedStyle(stage).filter`),'none');
+  if(process.env.WZB_SCREENSHOTS){const {data}=await command('Page.captureScreenshot',{format:'png'});await import('node:fs/promises').then(fs=>fs.writeFile(process.env.WZB_SCREENSHOTS+'/article-light.png',Buffer.from(data,'base64')));}
+  await evaluate(`setPref('light',false);show('Article')`);
+  if(process.env.WZB_SCREENSHOTS){const {data}=await command('Page.captureScreenshot',{format:'png'});await import('node:fs/promises').then(fs=>fs.writeFile(process.env.WZB_SCREENSHOTS+'/article-dark.png',Buffer.from(data,'base64')));}
+  await evaluate(`setPref('light',true);openAccount()`);
+  const modalContrast=await evaluate(`getComputedStyle(document.getElementById('acProfileName')).color`);
+  assert.equal(modalContrast,'rgb(16, 46, 64)');
+  await evaluate(`modalTop().card.closeModal();setPref('light',false)`);
+  console.log('PASS light theme uses actual colour tokens without image or semantic-colour inversion');
   assert.equal(exceptions.length, 0, JSON.stringify(exceptions));
-  console.log('26 browser scenarios passed; no real OpenAI or Supabase requests.');
+  console.log('31 browser scenarios passed; no real OpenAI or Supabase requests.');
 } finally {
   socket?.close(); browser.kill('SIGTERM');
   await new Promise(resolve => { if (browser.exitCode !== null) resolve(); else browser.once('exit', resolve); });

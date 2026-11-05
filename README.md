@@ -120,3 +120,7 @@ Nagłówki z osobną oceną są klikalne na ekranie artykułu i otwierają ten s
 ## Stabilność kont po audycie
 
 Opis rozdzielenia danych kont, migracji starych zapisów, synchronizacji usunięć i testów: [docs/account-stability.md](docs/account-stability.md). Ta zmiana nie wymaga nowej migracji SQL.
+
+## Układ i wersja do oceny po audycie
+
+Zmiany okien, motywów i responsywnego układu: [docs/release-review.md](docs/release-review.md). Diagnostyka reguł lokalnych: `npm run audit:analysis` (bez OpenAI); pełny raport z rozbieżnościami: [docs/analysis-quality-report.md](docs/analysis-quality-report.md).

@@ -15,6 +15,7 @@ function clearCardReveals() {
   pendingCards.forEach(card => card.classList.remove('reveal-pending')); pendingCards.clear();
 }
 function stopVisualMotion() {
+  if (typeof finishEntryNow === 'function') finishEntryNow();
   clearCardReveals();
   visualAnimations.forEach(animation => animation.cancel()); visualAnimations.clear();
 }
@@ -53,7 +54,7 @@ function playVisualEntry(name) {
       entries.filter(entry => entry.isIntersecting).forEach(({ target }) => {
         target.classList.remove('reveal-pending'); pendingCards.delete(target); observer.unobserve(target);
         visualAnimate(target, [{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'translateY(0)' }], {
-          duration: 360, delay: Math.min(sequence++, 4) * 55, easing: 'cubic-bezier(.22,.8,.24,1)', fill: 'backwards'
+          duration: 220, delay: Math.min(sequence++, 3) * 30, easing: 'cubic-bezier(.22,.8,.24,1)', fill: 'backwards'
         });
       });
     }, { root: scroller, threshold: .08 });
@@ -62,12 +63,12 @@ function playVisualEntry(name) {
   }
   screen.querySelectorAll('.map-point').forEach((point, index) => {
     visualAnimate(point, [{ opacity: 0, transform: 'translateY(18px) scale(.85)' }, { opacity: 1, transform: 'translateY(0) scale(1)' }], {
-      duration: 420, delay: index * 55, easing: 'cubic-bezier(.22,.8,.24,1)', fill: 'backwards'
+      duration: 240, delay: index * 35, easing: 'cubic-bezier(.22,.8,.24,1)', fill: 'backwards'
     });
   });
   const distribution = screen.querySelector('.result-distribution');
   if (distribution) visualAnimate(distribution, [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], {
-    duration: 520, delay: 100, easing: 'cubic-bezier(.22,.8,.24,1)', fill: 'backwards'
+    duration: 280, delay: 0, easing: 'cubic-bezier(.22,.8,.24,1)', fill: 'backwards'
   });
 }
 function closeVisualModal(back, card) {

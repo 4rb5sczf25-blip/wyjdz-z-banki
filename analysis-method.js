@@ -94,7 +94,7 @@
   function analyzeLocal(text, title = '') {
     const sample = sampleText(text, title);
     const rows = sample.units.map(unit => {
-      const strong = unit.text.match(STRONG), emotionWord = unit.text.match(EMOTION), loud = unit.text.match(/!|[A-ZĄĆĘŁŃÓŚŹŻ]{4,}/u);
+      const strong = unit.text.match(STRONG), emotionWord = unit.text.match(EMOTION), loud = unit.text.match(/!/u);
       const emotion = strong ? 3 : emotionWord ? (/obaw|niepok|zaskak/i.test(emotionWord[0]) ? 1 : 2) : loud ? 2 : 0;
       const opinionMatch = unit.text.match(OPINION);
       const marker = strong || emotionWord || loud || opinionMatch;
