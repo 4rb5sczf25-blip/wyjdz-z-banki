@@ -881,7 +881,9 @@ function fit(){fitDesk()}
 addEventListener('resize',fit);window.visualViewport&&visualViewport.addEventListener('resize',fit);deskMQ.addEventListener&&deskMQ.addEventListener('change',fit);fit();
 document.addEventListener('click',e=>{const a=e.target.closest('a[href]');if(!a)return;const m=a.getAttribute('href').match(/^([A-Za-z]+)\.dc\.html$/);if(!m)return;e.preventDefault();const back=/^(Wróć|Zamknij)/.test(a.getAttribute('aria-label')||'');dir=back?-1:1;navMode=a.closest('nav.tabbar')?'tab':(back?'back':'push');if(location.hash!=='#'+m[1])location.hash=m[1];else show(m[1])});
 addEventListener('hashchange',()=>show(location.hash.slice(1)));
-show(location.hash.slice(1)||(PREFS.splash?'Splash':'Main'));
+const initialScreen=location.hash.slice(1);
+const rememberedAccount=sbSession()&&!isGuestSession();
+show(rememberedAccount&&(!initialScreen||initialScreen==='Splash')?'Main':initialScreen||(PREFS.splash?'Splash':'Main'));
 finishAuthReturn();
 </script>
 <script>
