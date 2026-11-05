@@ -126,3 +126,8 @@ async function analyzeOwnMaterial(event, say) {
   } catch (e) { if (current === 'Main' && button.isConnected) say(e.message + ' Możesz też wkleić tekst ręcznie.', false); }
   finally { restore(); }
 }
+
+function resizeMaterialInput(field) {
+  field.style.height = '48px';
+  field.style.height = Math.min(148, Math.max(48, field.scrollHeight + 2)) + 'px';
+}
