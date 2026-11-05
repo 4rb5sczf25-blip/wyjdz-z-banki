@@ -19,10 +19,14 @@
 @keyframes modal-backdrop{from{opacity:0}to{opacity:1}}
 .material-loading{display:inline-flex;align-items:center;justify-content:center;gap:10px;max-width:100%;line-height:22px}
 .material-loading-label{min-width:0;white-space:normal}
-.busy-wave{display:block;flex:none;width:28px;height:20px;overflow:hidden;opacity:.9}
-.busy-wave svg{display:block;width:56px;height:20px;animation:analysis-wave 1.15s linear infinite}
-@keyframes analysis-wave{from{transform:translateX(0)}to{transform:translateX(-28px)}}
+.busy-sonar{position:relative;display:block;flex:none;width:26px;height:26px;overflow:hidden;isolation:isolate}
+.sonar-ring{position:absolute;inset:3px;border:1.5px solid currentColor;border-radius:50%;box-sizing:border-box;animation:sonar-pulse 1.8s ease-out infinite}
+.sonar-ring-delayed{animation-delay:-.9s}
+.sonar-core{position:absolute;left:10px;top:10px;width:6px;height:6px;border-radius:50%;background:currentColor}
+@keyframes sonar-pulse{0%{transform:scale(.35);opacity:.75}85%,100%{transform:scale(1);opacity:0}}
+.no-motion .sonar-ring{animation:none!important;opacity:.35;transform:none}
+.no-motion .sonar-ring-delayed{display:none}
 .analyze-btn.is-loading::after{display:none}
 .no-motion .reveal-pending{opacity:1}
 .no-motion .story-card:hover,.no-motion a:active,.no-motion button:active{transform:none!important}
-@media(prefers-reduced-motion:reduce){.reveal-pending{opacity:1}.story-card:hover,a:active,button:active{transform:none!important}.app-modal,.ob-back,.busy-wave svg{animation:none!important}}
+@media(prefers-reduced-motion:reduce){.reveal-pending{opacity:1}.story-card:hover,a:active,button:active{transform:none!important}.app-modal,.ob-back{animation:none!important}.sonar-ring{animation:none!important;opacity:.35;transform:none}.sonar-ring-delayed{display:none}}

@@ -42,3 +42,16 @@ function assessmentExplanation(article, index, fallback) {
   if (!row) return fallback;
   return { ...fallback, title: row.flags, body: row.reason + (row.cue ? ' Wskazany fragment: „' + row.cue + '”.' : '') + ' To ocena języka, nie weryfikacja informacji.' };
 }
+
+function openSentenceExplanation(article, index) {
+  const row = sentenceAssessment(article, index);
+  const kind = article.s[index]?.[0];
+  const fallback = { title: kind === 'emotion' ? 'Język emocjonalny' : kind === 'opinion' ? 'Opinia' : 'Twierdzenie sprawdzalne', body: 'To przybliżona klasyfikacja języka, nie weryfikacja prawdziwości informacji.' };
+  const explanation = assessmentExplanation(article, index, fallback);
+  openModal('<h2 id="fragment-explanation-title" style="margin-top:14px">Dlaczego to oznaczenie?</h2>' +
+    '<p style="color:#7FF0E0;font-weight:800">' + esc(explanation.title) + '</p>' +
+    '<blockquote style="margin:16px 0;padding:12px 14px;border-left:2px solid rgba(94,230,214,.5);background:rgba(255,255,255,.05);border-radius:4px 12px 12px 4px;font-size:15px;line-height:24px;overflow-wrap:anywhere">' + esc(article.s[index]?.[1] || '') + '</blockquote>' +
+    '<p id="mark-tip-body">' + esc(explanation.body) + '</p>' +
+    '<p style="font-size:12px;color:#A9CBD4">' + (article.demo ? 'Przykład demonstracyjny.' : article.ai ? 'Ocena AI może być błędna.' : 'To wynik reguł lokalnych, nie ocena modelu AI.') + '</p>' +
+    '<button type="button" data-close style="'+MB+';width:100%;border:0;background:#5EE6D6;color:#04202B">Zamknij</button>', card => card.setAttribute('aria-labelledby', 'fragment-explanation-title'));
+}

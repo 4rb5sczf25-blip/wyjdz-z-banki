@@ -91,9 +91,9 @@ Pop-up metodologii opisuje nową metodę v2: niezależne flagi sprawdzalnego twi
 
 ## Wygląd i animacje
 
-Efekty są w visual-polish.css i visual-polish.js. Karty pojawiają się przy wejściu w widok (dopiero po wejściu w obszar przewijania), a powrót do tego samego zestawu w danej sesji strony nie odtwarza ich ponownie. Mapa łagodnie wprowadza źródła i wyróżnia wybór. Nowy wynik ma jednoczesną animację segmentów paska. Oczekiwanie na analizę pokazuje falę i opis czynności, bez symulowanego procentu ukończenia.
+Efekty są w visual-polish.css i visual-polish.js. Karty pojawiają się przy wejściu w widok (dopiero po wejściu w obszar przewijania), a powrót do tego samego zestawu w danej sesji strony nie odtwarza ich ponownie. Mapa łagodnie wprowadza źródła i wyróżnia wybór. Nowy wynik ma jednoczesną animację segmentów paska. Oczekiwanie na analizę pokazuje subtelny sonar (rozchodzące się pierścienie) i opis czynności, bez symulowanego procentu ukończenia.
 
-Pop-upy zachowują przewijanie i odstępy, z krótkim wysunięciem i płynnym zamknięciem. Efekty respektują ustawienie Animacje oraz systemowe prefers-reduced-motion. Wyłączenie animacji zatrzymuje nowe efekty WAAPI i odsłania oczekujące karty, zamiast zostawiać je niewidoczne. Testy przeglądarkowe sprawdzają jednorazowe animacje, anulowanie ruchu i statyczny wskaźnik przy ograniczeniu ruchu; nie wywołują OpenAI.
+Pop-upy zachowują przewijanie i odstępy, z krótkim wysunięciem i płynnym zamknięciem. Efekty respektują ustawienie Animacje oraz systemowe prefers-reduced-motion. Wyłączenie animacji zatrzymuje nowe efekty WAAPI i odsłania oczekujące karty, zamiast zostawiać je niewidoczne. Testy przeglądarkowe sprawdzają jednorazowe animacje, anulowanie ruchu i statyczny sonar przy ograniczeniu ruchu; nie wywołują OpenAI.
 
 ## Eksperymentalna analiza v2
 
@@ -104,3 +104,7 @@ GPT-4o-mini zwraca checkable i opinion jako niezależne wartości logiczne, emot
 Widoczne są: zasięg nacechowania (X z N fragmentów), maksimum 0–3, rozdzielenie przypisania autor/cytat/niepewne, zakres próbki, tytuł i wyjaśnienia. Sprawdzalne twierdzenia nie są wyróżniane na zielono. Kategorie mogą się nakładać, więc nie należy sumować ich do 100%. Dawny wzór 0,35 i ograniczenie 3–97% nie są używane dla nowych wyników. Pole pct pozostaje wewnętrznym adapterem zgodności i oznacza wyłącznie udział nacechowanych fragmentów próbki; nie jest prezentowane jako ocena manipulacji. Udostępnianie wyniku pokazuje nowe podsumowanie.
 
 Tryb lokalny używa słów-kluczy i przy cytatach oznacza przypisanie jako niepewne; nie udaje oceny modelu. Fikcyjne artykuły mają etykiety demonstracyjne wyliczone tymi regułami, ale ich stara mapa procentowa jest jawnie makietą. Zestaw do oceny ludzi i ograniczenia: docs/analysis-v2.md i docs/calibration-v2.json. Nie wykonano płatnej kalibracji modelu ani nie deklarujemy trafności naukowej.
+
+Wyjaśnienie oznaczonego fragmentu otwiera przewijane okienko nad całą aplikacją, bez przywiązania do pozycji zdania. Dzięki temu nie jest zasłaniane przez górę ekranu ani dolne menu. Zamknięcie przywraca fokus i pozycję w artykule.
+
+Dźwięki Web Audio czekają na wznowienie kontekstu przed planowaniem sygnału, obsługują ponowny gest po przerwaniu odtwarzania i odtwarzają kontekst po jego zamknięciu. Wyłączenie Dźwięków wycisza tor główny; włączenie daje krótką próbkę. Ustawienia zawierają przycisk „Sprawdź dźwięk”. Testy w Chromium potwierdzają uruchomienie grafu dźwiękowego i wyciszanie; nie potwierdzają fizycznej słyszalności na urządzeniu użytkownika ani zachowania konkretnej wersji Safari.
