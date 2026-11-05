@@ -78,7 +78,7 @@ try {
   await command('Page.addScriptToEvaluateOnNewDocument', { source: `const originalFetch=window.fetch.bind(window);window.guestSignups=0;window.profileRequests=[];window.fetch=async(input,options)=>{
 if(String(input).includes('.supabase.co/auth/v1/user')&&options?.method==='PUT'){const body=JSON.parse(options.body);window.profileRequests.push(body);return new Response(JSON.stringify({id:'test-user',email:'test@example.com',user_metadata:body.data}),{status:200,headers:{'Content-Type':'application/json'}})}
 if(String(input).includes('.supabase.co/auth/v1/otp')){window.profileRequests.push(JSON.parse(options.body));return new Response('{}',{status:200,headers:{'Content-Type':'application/json'}})}
-if(String(input).includes('.supabase.co/auth/v1/signup')){window.guestSignups++;return new Response(JSON.stringify({access_token:'guest.jwt.token',refresh_token:'guest-refresh',expires_in:3600,user:{id:'guest-user',is_anonymous:true}}),{status:200,headers:{'Content-Type':'application/json'}})}return originalFetch(input,options)};localStorage.setItem('wzb-onboard','1');localStorage.setItem('wzb-prefs',JSON.stringify({motion:false,sound:false,splash:false}));` });
+if(String(input).includes('.supabase.co/auth/v1/signup')){window.guestSignups++;return new Response(JSON.stringify({access_token:'guest.jwt.token',refresh_token:'guest-refresh',expires_in:3600,user:{id:'guest-user',is_anonymous:true}}),{status:200,headers:{'Content-Type':'application/json'}})}return originalFetch(input,options)};localStorage.setItem('wzb-onboarded','1');localStorage.setItem('wzb-prefs',JSON.stringify({motion:false,sound:false,splash:false}));` });
   const main = async () => {
     await evaluate(`document.querySelectorAll('.ob-back').forEach(e=>e.remove());location.hash='Main';show('Main');PREFS.motion=false;PREFS.sound=false;localStorage.setItem('wzb-session',JSON.stringify({at:'test.jwt.token',rt:'test',uid:'test-user',exp:Date.now()+3600000}));`);
     await waitFor(`Boolean(document.getElementById('link'))`);
@@ -243,8 +243,22 @@ if(String(input).includes('.supabase.co/auth/v1/signup')){window.guestSignups++;
   await waitFor(`AC && AC.state==='running'`);
   await evaluate(`setPref('sound',false)`);assert.equal(await evaluate(`MASTER.gain.value`),0);
   console.log('PASS trusted sound-test interaction starts Web Audio and sound-off mutes the output');
+  await evaluate(`setPref('sound',false);document.querySelectorAll('.ob-back').forEach(e=>e.remove());show('Main');const text='Zdaniem części ekspertów ta kwota może jednak nie wystarczyć na trwałą poprawę sytuacji.';showMaterialAnalysis(AnalysisMethod.analyzeLocal(text),text)`);
+  await waitFor(`location.hash==='#Article'`);
+  await evaluate(`stage.firstElementChild.querySelector('.mark').click()`);
+  assert.equal(await evaluate(`document.querySelector('.explanation-quote mark').textContent`),'Zdaniem');
+  assert.equal(await evaluate(`Boolean(document.querySelector('.badge-opinion'))`),true);
+  assert.equal(await evaluate(`Boolean(document.querySelector('.explanation-quote .cue-opinion'))`),true);
+  assert.equal(await evaluate(`Boolean(document.querySelector('.badge-emotion'))`),false);
+  console.log('PASS opinion evidence highlighted in yellow with matching badge and meaningful local reason');
+  await command('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
+  await evaluate(`document.querySelector('.app-modal [data-close]').click();show('Splash');PREFS.motion=true;window.entryPromise=playEntryDive(document.getElementById('start-guest'));true`);
+  await waitFor(`Boolean(document.querySelector('.entry-dive-canvas'))`);
+  await waitFor(`current==='Main' && !document.querySelector('.entry-dive-canvas')`);
+  assert.equal(await evaluate(`Boolean(stage.firstElementChild.inert)`),false);
+  console.log('PASS restored water-and-bubbles entry reaches Main and cleans up the canvas');
   assert.equal(exceptions.length, 0, JSON.stringify(exceptions));
-  console.log('19 browser scenarios passed; no real OpenAI or Supabase requests.');
+  console.log('21 browser scenarios passed; no real OpenAI or Supabase requests.');
 } finally {
   socket?.close(); browser.kill('SIGTERM');
   await new Promise(resolve => { if (browser.exitCode !== null) resolve(); else browser.once('exit', resolve); });

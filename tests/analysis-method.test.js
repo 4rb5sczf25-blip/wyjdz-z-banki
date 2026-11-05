@@ -38,3 +38,8 @@ test('format normalization preserves literal source evidence and never invents a
  assert.throws(()=>M.validateRows({sentences:[{...row,cue:'wymyślony skandal'}]},sample),{code:'ROW_CUE_MISMATCH'});
  assert.throws(()=>M.validateRows({sentences:[]},sample),{code:'ROW_COUNT'});
 });
+
+test('local opinion exposes a literal marker and explains opinion rather than claiming no analysis',()=>{
+ const r=M.analyzeLocal('Zdaniem części ekspertów ta kwota może jednak nie wystarczyć na trwałą poprawę sytuacji.');
+ assert.equal(r.rows[0].opinion,true);assert.equal(r.rows[0].cue,'Zdaniem');assert.match(r.rows[0].reason,/opiniujące/);
+});

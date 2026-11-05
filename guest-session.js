@@ -26,7 +26,17 @@ async function enterGuest(event) {
   try { await ensureGuestSession(); } catch (error) { notice = error.message; }
   finally { restore(); }
   if (current !== 'Splash') return;
-  location.hash = 'Main';
+  await enterApplication(button);
   if (notice) setTimeout(() => showToast(notice), 100);
 }
 function startAccount() { openAccount(); }
+
+async function enterApplication(button) {
+  if (current !== 'Splash') return;
+  const trigger = button?.isConnected ? button : document.getElementById('start-guest');
+  if (motionOK() && typeof window.playEntryDive === 'function') {
+    const entered = await window.playEntryDive(trigger);
+    if (entered || current !== 'Splash') return;
+  }
+  if (location.hash !== '#Main') location.hash = 'Main'; else show('Main');
+}

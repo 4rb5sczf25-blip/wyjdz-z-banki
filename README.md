@@ -108,3 +108,9 @@ Tryb lokalny używa słów-kluczy i przy cytatach oznacza przypisanie jako niepe
 Wyjaśnienie oznaczonego fragmentu otwiera przewijane okienko nad całą aplikacją, bez przywiązania do pozycji zdania. Dzięki temu nie jest zasłaniane przez górę ekranu ani dolne menu. Zamknięcie przywraca fokus i pozycję w artykule.
 
 Dźwięki Web Audio czekają na wznowienie kontekstu przed planowaniem sygnału, obsługują ponowny gest po przerwaniu odtwarzania i odtwarzają kontekst po jego zamknięciu. Wyłączenie Dźwięków wycisza tor główny; włączenie daje krótką próbkę. Ustawienia zawierają przycisk „Sprawdź dźwięk”. Testy w Chromium potwierdzają uruchomienie grafu dźwiękowego i wyciszanie; nie potwierdzają fizycznej słyszalności na urządzeniu użytkownika ani zachowania konkretnej wersji Safari.
+
+Wyjaśnienie fragmentu pokazuje niezależne etykiety: neutralną dla sprawdzalnego twierdzenia, żółtą dla opinii i koralową dla emocjonalnego języka. Dosłowny cue jest podświetlany w cytacie i osobno pod nim; przy zbiegu opinii i emocji żółte tło łączy się z koralowym podkreśleniem. Brakującego cytatu nie wymyślamy. Reguły lokalne wskazują także marker opinii i opisują go jako opinię.
+
+Głośność efektów obniżono przez SOUND_GAIN=.14. Kliknięcia reagują na pointerdown, bez czekania na puszczenie przycisku; sygnały starsze niż 100 ms są odrzucane zamiast odtwarzane po wybudzeniu. Obsługa audio ma limit oczekiwania na resume, odzyskiwanie kontekstu na kolejnym geście, czyszczenie zakończonych źródeł i zatrzymywanie dźwięków przy ukryciu karty. Ostateczna słyszalność zależy też od Safari, wyciszenia i urządzenia.
+
+Efekt wody i bąbelków jest ponownie dostępny przy wejściu z ekranu powitalnego (przycisk gościa oraz logowanie kodem). Nie wyświetla ponownie ekranu logowania użytkownikom z zapamiętaną sesją. Pomija efekt przy ograniczeniu ruchu i usuwa płótno po zakończeniu; samouczek nie przykrywa animacji.

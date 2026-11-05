@@ -13,3 +13,15 @@
 [aria-label="Filtr oznaczeń w tekście"] button{background:rgba(207,230,236,.06)}
 
 .mark-tip{max-height:340px;overflow-y:auto;overscroll-behavior:contain}
+
+.explanation-badges{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.explanation-badge{padding:6px 10px;border:1px solid;border-radius:10px;font-size:13px;line-height:19px;font-weight:800}
+.badge-claim{color:#CFE6EC;border-color:rgba(207,230,236,.25);background:rgba(207,230,236,.05)}
+.badge-opinion{color:#F5D874;border-color:rgba(242,201,76,.45);background:rgba(242,201,76,.12)}
+.badge-emotion{color:#FFB0A4;border-color:rgba(255,122,102,.45);background:rgba(255,122,102,.12)}
+.explanation-quote{margin:16px 0;padding:12px 14px;border-left:2px solid;background:rgba(255,255,255,.05);border-radius:4px 12px 12px 4px;font-size:15px;line-height:25px;overflow-wrap:anywhere}
+.evidence-cue{color:inherit;border-radius:3px;padding:1px 0;font-weight:800;background:rgba(207,230,236,.12)}
+.cue-opinion{background:rgba(242,201,76,.22);border-bottom:2px dashed #F2C94C}
+.cue-emotion{background:rgba(255,122,102,.18);text-decoration:underline wavy #FF7A66;text-underline-offset:4px}
+.cue-opinion.cue-emotion{background:rgba(242,201,76,.22);border-bottom:0;box-shadow:inset 0 -2px rgba(242,201,76,.65)}
+.evidence-label{font-size:13px!important;line-height:22px!important}

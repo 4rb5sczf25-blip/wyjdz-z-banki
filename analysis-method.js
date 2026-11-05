@@ -96,11 +96,19 @@
     const rows = sample.units.map(unit => {
       const strong = unit.text.match(STRONG), emotionWord = unit.text.match(EMOTION), loud = unit.text.match(/!|[A-ZĄĆĘŁŃÓŚŹŻ]{4,}/u);
       const emotion = strong ? 3 : emotionWord ? (/obaw|niepok|zaskak/i.test(emotionWord[0]) ? 1 : 2) : loud ? 2 : 0;
-      const cue = (strong?.[0] || emotionWord?.[0] || loud?.[0] || '').slice(0, 60);
+      const opinionMatch = unit.text.match(OPINION);
+      const marker = strong || emotionWord || loud || opinionMatch;
+      let cue = '';
+      if (marker) {
+        let start = marker.index, end = start + marker[0].length;
+        while (start > 0 && /\p{L}/u.test(unit.text[start-1])) start--;
+        while (end < unit.text.length && /\p{L}/u.test(unit.text[end])) end++;
+        cue = unit.text.slice(start, Math.min(end, start+60));
+      }
       const uncertain = /[„”"«»]|powiedział|stwierdził|według|cytuj/i.test(unit.text);
-      return { ...unit, checkable: CHECKABLE.test(unit.text), opinion: OPINION.test(unit.text) || Boolean(strong), emotion,
+      return { ...unit, checkable: CHECKABLE.test(unit.text), opinion: Boolean(opinionMatch) || Boolean(strong), emotion,
         voice: emotion ? (uncertain ? 'uncertain' : 'author') : 'none', cue,
-        reason: emotion ? 'Reguły lokalne wykryły nacechowane słowo lub zapis. Ocena jest przybliżona.' : 'Reguły lokalne nie wykryły nacechowania. Nie weryfikują prawdziwości twierdzeń.' };
+        reason: emotion ? 'Reguły lokalne wykryły nacechowany język. Ocena siły jest przybliżona.' : opinionMatch ? 'Reguły lokalne wykryły sformułowanie opiniujące lub przewidujące. Nie jest to ocena modelu AI.' : 'Reguły lokalne nie wykryły opinii ani emocjonalnego języka. Nie weryfikują prawdziwości informacji.' };
     });
     return result(rows, sample, text, false);
   }

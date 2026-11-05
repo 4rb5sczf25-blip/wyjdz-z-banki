@@ -43,14 +43,29 @@ function assessmentExplanation(article, index, fallback) {
   return { ...fallback, title: row.flags, body: row.reason + (row.cue ? ' Wskazany fragment: „' + row.cue + '”.' : '') + ' To ocena języka, nie weryfikacja informacji.' };
 }
 
+function explanationBadges(row, kind) {
+  const labels = [];
+  if (row ? row.checkable : kind === 'fact') labels.push('<span class="explanation-badge badge-claim">Twierdzenie sprawdzalne</span>');
+  if (row ? row.opinion : kind === 'opinion') labels.push('<span class="explanation-badge badge-opinion">Opinia</span>');
+  if (row ? row.emotion > 0 : kind === 'emotion') labels.push('<span class="explanation-badge badge-emotion">Język emocjonalny'+(row?' · '+esc(EMOTION_LEVELS[row.emotion].toLowerCase()):'')+'</span>');
+  return labels.join('') || '<span class="explanation-badge badge-claim">Bez wykrytego nacechowania</span>';
+}
+function highlightedEvidence(text, cue, row, kind) {
+  const position = cue ? text.indexOf(cue) : -1;
+  if (position < 0) return esc(text);
+  const classes = 'evidence-cue' + ((row ? row.opinion : kind === 'opinion') ? ' cue-opinion' : '') + ((row ? row.emotion > 0 : kind === 'emotion') ? ' cue-emotion' : '');
+  return esc(text.slice(0, position)) + '<mark class="'+classes+'">'+esc(cue)+'</mark>'+esc(text.slice(position+cue.length));
+}
 function openSentenceExplanation(article, index) {
-  const row = sentenceAssessment(article, index);
-  const kind = article.s[index]?.[0];
+  const row = sentenceAssessment(article, index), kind = article.s[index]?.[0];
   const fallback = { title: kind === 'emotion' ? 'Język emocjonalny' : kind === 'opinion' ? 'Opinia' : 'Twierdzenie sprawdzalne', body: 'To przybliżona klasyfikacja języka, nie weryfikacja prawdziwości informacji.' };
   const explanation = assessmentExplanation(article, index, fallback);
+  const text = article.s[index]?.[1] || '', cue = row?.cue && text.includes(row.cue) ? row.cue : '';
+  const color = (row ? row.emotion > 0 : kind === 'emotion') ? '#FF7A66' : (row ? row.opinion : kind === 'opinion') ? '#F2C94C' : '#A9CBD4';
   openModal('<h2 id="fragment-explanation-title" style="margin-top:14px">Dlaczego to oznaczenie?</h2>' +
-    '<p style="color:#7FF0E0;font-weight:800">' + esc(explanation.title) + '</p>' +
-    '<blockquote style="margin:16px 0;padding:12px 14px;border-left:2px solid rgba(94,230,214,.5);background:rgba(255,255,255,.05);border-radius:4px 12px 12px 4px;font-size:15px;line-height:24px;overflow-wrap:anywhere">' + esc(article.s[index]?.[1] || '') + '</blockquote>' +
+    '<div class="explanation-badges">' + explanationBadges(row,kind) + '</div>' +
+    '<blockquote class="explanation-quote" style="border-left-color:'+color+'">' + highlightedEvidence(text,cue,row,kind) + '</blockquote>' +
+    (cue ? '<p class="evidence-label"><strong>Wskazane słowa:</strong> '+highlightedEvidence(cue,cue,row,kind)+'</p>' : '<p class="evidence-label">Nie wskazano osobnego słowa-klucza. Oznaczenie dotyczy całego fragmentu i jego kontekstu.</p>') +
     '<p id="mark-tip-body">' + esc(explanation.body) + '</p>' +
     '<p style="font-size:12px;color:#A9CBD4">' + (article.demo ? 'Przykład demonstracyjny.' : article.ai ? 'Ocena AI może być błędna.' : 'To wynik reguł lokalnych, nie ocena modelu AI.') + '</p>' +
     '<button type="button" data-close style="'+MB+';width:100%;border:0;background:#5EE6D6;color:#04202B">Zamknij</button>', card => card.setAttribute('aria-labelledby', 'fragment-explanation-title'));
