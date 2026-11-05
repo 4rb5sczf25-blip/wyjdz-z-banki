@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="pl"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#04111D">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Wyjdź z bańki</title>
@@ -19,11 +20,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Manrope:wght@500;600;700;800&display=swap">
 <style>
-html,body{margin:0;height:100%;background:#04111D;overflow:hidden}
+html,body{margin:0;height:100%;background:#04111D;overflow:hidden;color-scheme:dark;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{position:fixed;left:0;top:0;width:100%;height:100%;overflow:hidden;contain:paint}
 a{color:inherit;text-decoration:none}
 button,input{font-family:inherit}
 input::placeholder{color:#8FB3BE;opacity:1}
-#stage{position:absolute;left:50%;top:50%;width:390px;height:844px;transform-origin:center center;overflow:hidden}
+#stage{position:absolute;left:0;top:0;width:390px;height:844px;transform-origin:0 0;overflow:hidden}
 a,button{transition:transform .14s ease,filter .14s ease}
 a:active,button:active{transform:scale(.96);filter:brightness(1.15)}
 svg[width="390"] circle{transform-box:fill-box;transform-origin:center;animation:bob 6s ease-in-out infinite}
@@ -157,7 +159,7 @@ section[aria-live],#stage button[onclick]{animation:pop .28s ease both}
 
 <script>
 /* App version: bump this on every release (shown on the splash, in Settings and in the desktop side panel) */
-const APP_VERSION='Beta 0.2';
+const APP_VERSION='Beta 0.3';
 /* Where tester feedback goes. Set ONE of these: a form endpoint (POST JSON, e.g. Formspree) or an e-mail address. With both empty, the tester gets the text to share/copy. */
 const FEEDBACK_ENDPOINT='';
 const FEEDBACK_EMAIL='support@wyjdzzbanki.pl';
@@ -448,9 +450,9 @@ function syncSide(){
   links.forEach((l,i)=>{if(i===ix)l.setAttribute('aria-current','page');else l.removeAttribute('aria-current')});
 }
 function fitDesk(){
-  const desk=deskMQ.matches;document.documentElement.classList.toggle('desk',desk);
-  const sc=desk?Math.min((innerHeight-40)/844,1.5):Math.min(innerWidth/390,innerHeight/844,1.6);
-  stage.style.transform='translate(-50%,-50%) scale('+sc+')';
+  const desk=deskMQ.matches;document.documentElement.classList.toggle('desk',desk);const vv=window.visualViewport,W=Math.round(vv?vv.width:innerWidth),H=Math.round(vv?vv.height:innerHeight);
+  const sc=desk?Math.min((H-40)/844,1.5):Math.min(W/390,H/844,1.6);
+  stage.style.transform='translate('+((W-390*sc)/2)+'px,'+((H-844*sc)/2)+'px) scale('+sc+')';
   if(desk){const half=195*sc,room=innerWidth/2-half-32,w=270;
     const a=document.getElementById('side'),b=document.getElementById('side2');
     a.style.display=room>=w?'':'none';b.style.display=room>=w?'':'none';
@@ -735,7 +737,7 @@ function animateTabs(prevIdx){
   return prevIdx!=null;
 }
 function fit(){fitDesk()}
-addEventListener('resize',fit);deskMQ.addEventListener&&deskMQ.addEventListener('change',fit);fit();
+addEventListener('resize',fit);window.visualViewport&&visualViewport.addEventListener('resize',fit);deskMQ.addEventListener&&deskMQ.addEventListener('change',fit);fit();
 document.addEventListener('click',e=>{const a=e.target.closest('a[href]');if(!a)return;const m=a.getAttribute('href').match(/^([A-Za-z]+)\.dc\.html$/);if(!m)return;e.preventDefault();const back=/^(Wróć|Zamknij)/.test(a.getAttribute('aria-label')||'');dir=back?-1:1;navMode=a.closest('nav.tabbar')?'tab':(back?'back':'push');if(location.hash!=='#'+m[1])location.hash=m[1];else show(m[1])});
 addEventListener('hashchange',()=>show(location.hash.slice(1)));
 show(location.hash.slice(1)||(PREFS.splash?'Splash':'Main'));
