@@ -10,6 +10,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 const root = new URL('../', import.meta.url);
 const calls = [];
 let extractionFails = false, analysisFails = false;
+let guestAI = 0;
 const articleText = 'Sejm przyjął nową ustawę dotyczącą transportu regionalnego. Moim zdaniem to dobry pomysł. To skandal! </textarea><img src=x onerror="window.injected=true">';
 const server = http.createServer(async (req, res) => {
   try {
@@ -17,6 +18,7 @@ const server = http.createServer(async (req, res) => {
       let raw = ''; for await (const part of req) raw += part;
       const body = JSON.parse(raw); calls.push({ path: req.url, body, auth: req.headers.authorization });
       res.setHeader('Content-Type', 'application/json');
+      if (req.url === '/api/analyze' && req.headers.authorization === 'Bearer guest.jwt.token' && ++guestAI > 2) { res.statusCode = 429; res.end(JSON.stringify({ error: 'Limit gościa: 2 analizy AI dziennie. Zaloguj się.' })); return; }
       if ((req.url === '/api/article' && extractionFails) || (req.url === '/api/analyze' && analysisFails)) {
         res.statusCode = 429; res.end(JSON.stringify({ error: 'Limit testowy. Wklej tekst ręcznie.' })); return;
       }
@@ -25,7 +27,7 @@ const server = http.createServer(async (req, res) => {
         : { s: [['fact', body.text.slice(0, 100)]], head: 'Wynik testowy', pct: 3, ai: true }));
       return;
     }
-    const files = { '/': 'index.html', '/article-flow.js': 'article-flow.js', '/auth-return.js': 'auth-return.js', '/logo.jpg': 'logo.jpg', '/favicon.png': 'favicon.png', '/manifest.webmanifest': 'manifest.webmanifest' };
+    const files = { '/': 'index.html', '/article-flow.js': 'article-flow.js', '/auth-return.js': 'auth-return.js', '/guest-session.js': 'guest-session.js', '/logo.jpg': 'logo.jpg', '/favicon.png': 'favicon.png', '/manifest.webmanifest': 'manifest.webmanifest' };
     const file = files[req.url];
     if (!file) { res.statusCode = 404; res.end(); return; }
     res.setHeader('Content-Type', file.endsWith('.js') ? 'text/javascript' : file.endsWith('.html') ? 'text/html; charset=utf-8' : file.endsWith('.jpg') ? 'image/jpeg' : 'application/octet-stream');
@@ -66,7 +68,7 @@ try {
   };
   await command('Runtime.enable'); await command('Page.enable'); await command('Network.enable');
   await command('Network.setBlockedURLs', { urls: ['*fonts.googleapis.com*', '*fonts.gstatic.com*', '*supabase.co*'] });
-  await command('Page.addScriptToEvaluateOnNewDocument', { source: `localStorage.setItem('wzb-onboard','1');localStorage.setItem('wzb-prefs',JSON.stringify({motion:false,sound:false,splash:false}));` });
+  await command('Page.addScriptToEvaluateOnNewDocument', { source: `const originalFetch=window.fetch.bind(window);window.guestSignups=0;window.fetch=async(input,options)=>{if(String(input).includes('.supabase.co/auth/v1/signup')){window.guestSignups++;return new Response(JSON.stringify({access_token:'guest.jwt.token',refresh_token:'guest-refresh',expires_in:3600,user:{id:'guest-user',is_anonymous:true}}),{status:200,headers:{'Content-Type':'application/json'}})}return originalFetch(input,options)};localStorage.setItem('wzb-onboard','1');localStorage.setItem('wzb-prefs',JSON.stringify({motion:false,sound:false,splash:false}));` });
   const main = async () => {
     await evaluate(`document.querySelectorAll('.ob-back').forEach(e=>e.remove());location.hash='Main';show('Main');PREFS.motion=false;PREFS.sound=false;localStorage.setItem('wzb-session',JSON.stringify({at:'test.jwt.token',rt:'test',uid:'test-user',exp:Date.now()+3600000}));`);
     await waitFor(`Boolean(document.getElementById('link'))`);
@@ -113,15 +115,33 @@ try {
   assert.equal(await evaluate(`document.getElementById('article-preview').value`), articleText);
   assert.equal(await evaluate(`document.getElementById('article-confirm').disabled`), false);
   console.log('PASS AI denial preserves editable preview for retry');
-  await main(); await evaluate(`sbStore(null)`);
-  const beforeGuest = calls.length;
-  await submit('https://example.com/guest'); await waitFor(`document.getElementById('analyze-msg').textContent.includes('Zaloguj')`);
-  assert.equal(calls.length, beforeGuest);
+  analysisFails = false;
+  await main(); await evaluate(`sbStore(null);location.hash='Splash';show('Splash')`);
+  await evaluate(`document.getElementById('start-account').click()`);
+  assert.match(await evaluate(`document.querySelector('#acBody').innerText`), /Utwórz konto/);
+  await evaluate(`document.querySelector('#acBody [data-x]').click();document.getElementById('start-guest').click()`);
+  await waitFor(`location.hash === '#Main' && isGuestSession()`);
+  assert.equal(await evaluate(`window.guestSignups`), 1);
+  console.log('PASS start screen offers login/signup and guest without email');
+  await submit('https://example.com/guest');
+  await waitFor(`Boolean(document.getElementById('article-preview'))`);
+  assert.match(await evaluate(`document.getElementById('article-note').textContent`), /2 analizy/);
+  const aiBefore = calls.filter(c=>c.path==='/api/analyze').length;
+  await evaluate(`document.getElementById('article-cancel').click()`);
+  assert.equal(calls.filter(c=>c.path==='/api/analyze').length, aiBefore);
   await submit(edited); await waitFor(`location.hash === '#Article'`);
-  assert.equal(calls.length, beforeGuest); assert.equal(await evaluate(`curArticle().ai`), false);
-  console.log('PASS guests cannot fetch/use AI; manual local analysis works');
+  assert.equal(calls.at(-1).auth, 'Bearer guest.jwt.token');
+  assert.equal(await evaluate(`curArticle().ai`), true);
+  await evaluate(`location.hash='Main';show('Main')`);
+  await submit(edited); await waitFor(`location.hash === '#Article'`);
+  assert.equal(await evaluate(`curArticle().ai`), true);
+  await evaluate(`location.hash='Main';show('Main')`);
+  await submit(edited); await waitFor(`location.hash === '#Article'`);
+  assert.equal(await evaluate(`curArticle().ai`), false);
+  assert.equal(await evaluate(`window.guestSignups`), 1);
+  console.log('PASS guest session reused; preview free; two AI analyses then local fallback');
   assert.equal(exceptions.length, 0, JSON.stringify(exceptions));
-  console.log('9 browser scenarios passed; no real OpenAI or Supabase requests.');
+  console.log('10 browser scenarios passed; no real OpenAI or Supabase requests.');
 } finally {
   socket?.close(); browser.kill('SIGTERM');
   await new Promise(resolve => { if (browser.exitCode !== null) resolve(); else browser.once('exit', resolve); });

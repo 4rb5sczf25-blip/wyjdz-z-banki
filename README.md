@@ -4,12 +4,12 @@ Aplikacja HTML/JavaScript na Vercel. Konta użytkowników obsługuje Supabase.
 
 ## Analiza linku
 
-1. Zaloguj się w aplikacji (Ustawienia → Konto).
+1. Wybierz „Zaloguj się / Utwórz konto” lub „Kontynuuj jako gość” na ekranie powitalnym. Logowanie jest dostępne również na ekranie głównym i w Ustawieniach.
 2. Wklej adres artykułu i wybierz „Analizuj wiadomość”. Serwer pobierze stronę i wyodrębni artykuł bez korzystania z OpenAI ani płatnego dostawcy ekstrakcji.
 3. Sprawdź podgląd tekstu i ewentualnie go popraw. Jeśli artykuł był dłuższy niż 12 000 znaków, zobaczysz informację o skróceniu.
 4. Dopiero „Zatwierdź i analizuj AI” wysyła tekst do GPT-4o-mini. „Anuluj” nie uruchamia AI.
 
-Wklejanie własnego tekstu nadal działa: aplikacja próbuje analizy AI, a gdy nie jest ona dostępna, wykonuje dotychczasową analizę lokalną. Wynik lokalny jest tak oznaczony. Bez logowania dostępna jest analiza lokalna. Dla linku błąd AI pozostawia podgląd do edycji; nie udaje udanej analizy AI.
+Wklejanie własnego tekstu nadal działa: aplikacja próbuje analizy AI, a gdy nie jest ona dostępna, wykonuje dotychczasową analizę lokalną. Wynik lokalny jest tak oznaczony. Gość ma automatyczną sesję bez e-maila i 2 analizy AI dziennie. Analiza lokalna pozostaje dostępna bez limitu AI. Dla linku błąd AI pozostawia podgląd do edycji; nie udaje udanej analizy AI.
 
 Pobieranie nie obsługuje paywalli, logowania do wydawcy ani stron wymagających JavaScript. Nie obchodzi zabezpieczeń serwisów; przy błędzie proponuje ręczne wklejenie tekstu. Adresy dostępne wyłącznie przez IPv6 oraz niestandardowe porty nie są obsługiwane. Samo pobranie nie kosztuje kredytów OpenAI, ale podlega limitom infrastruktury Vercel/Supabase. Analiza AI pozostaje płatna według cennika OpenAI.
 
@@ -17,7 +17,7 @@ Pobieranie nie obsługuje paywalli, logowania do wydawcy ani stron wymagających
 
 Zmiany przygotowano na osobnej gałęzi; nie wymagają łączenia z `main` do testowania wersji Preview.
 
-1. W Supabase otwórz **SQL Editor** i wykonaj plik `supabase/migrations/202611050001_analysis_quota.sql`. Tworzy osobną tabelę limitów i funkcję; nie zmienia tabel kont, opinii ani postępów. Skrypt można wykonać ponownie.
+1. W Supabase otwórz **SQL Editor** i wykonaj kolejno pliki `supabase/migrations/202611050001_analysis_quota.sql` i `supabase/migrations/202611050002_guest_quota.sql`. Jeśli pierwszy już wykonano, uruchom tylko drugi. Tworzy osobną tabelę limitów i funkcję; nie zmienia tabel kont, opinii ani postępów. Skrypt można wykonać ponownie.
 2. W Vercel, **Project Settings → Environment Variables**, ustaw dla wybranego środowiska (najpierw Preview):
    - `OPENAI_API_KEY` — klucz OpenAI; jeśli już istnieje, zachowaj go.
    - `SUPABASE_URL` — `https://qvyrebelzifnwzmylgzr.supabase.co` (ten sam projekt co frontend).
@@ -25,16 +25,19 @@ Zmiany przygotowano na osobnej gałęzi; nie wymagają łączenia z `main` do te
 3. Utwórz wdrożenie Preview tej gałęzi. Vercel automatycznie obsługuje `api/article.js` i `api/analyze.js`. Repozytorium ustawia Node.js 24 i limit czasu funkcji 30 s w `vercel.json`; nie ma komendy budowania frontendu.
 4. Sprawdź logowanie oraz pobranie i anulowanie podglądu na Preview. Prawdziwe kliknięcie „Zatwierdź i analizuj AI” korzysta już z płatnego API — automatyczne testy go nie wywołują.
 
+W Supabase → Authentication → Sign In / Providers → Anonymous włącz **Allow anonymous sign-ins** i zapisz. Sesje gościnne nie wysyłają e-maili.
+
 Bez sekretów lub migracji serwer odmawia pobierania i AI (zamiast pomijać limity). Analiza lokalna własnego tekstu nadal działa. Nie ma migracji ani wdrożenia wykonywanego automatycznie przez testy.
 
 ## Limity i zabezpieczenia
 
 | Operacja | Na potwierdzone konto e-mail / dzień | Łącznie dla aplikacji / dzień | Odstęp na konto |
 | --- | --- | --- | --- |
-| Analiza AI | 5 | 100 | 30 sekund |
+| Analiza AI — konto e-mail | 5 | 100 (wspólnie z gośćmi) | 30 sekund |
+| Analiza AI — gość | 2 | 100 (wspólnie z kontami) | 30 sekund |
 | Pobranie artykułu | 20 | 500 | 5 sekund |
 
-Dni liczone są w UTC. Także nieudane próby po przyznaniu limitu zużywają limit, co ogranicza powtarzanie kosztownych operacji. Limity są transakcyjne i współdzielone przez instancje Vercel: wiersz globalny jest blokowany przed wierszem użytkownika. Funkcję może wywoływać wyłącznie rola serwera `service_role`. Zmianę limitów wykonuje się w migracji SQL; utrzymuj zgodność komunikatu w `article-flow.js`. W razie potrzeby można cyklicznie usuwać wiersze limitów starsze niż 30 dni. Warto także ustawić alerty kosztów OpenAI i ochronę ruchu w Vercel; limity aplikacji nie dotyczą innych aplikacji używających tego samego klucza OpenAI.
+Dni liczone są w UTC. Także nieudane próby po przyznaniu limitu zużywają limit, co ogranicza powtarzanie kosztownych operacji. Limity są transakcyjne i współdzielone przez instancje Vercel: wiersz globalny jest blokowany przed wierszem użytkownika. Funkcja `consume_analysis_quota_v2` odczytuje rodzaj konta z `auth.users`, a nie z danych przeglądarki. Funkcję może wywoływać wyłącznie rola serwera `service_role`. Zmianę limitów wykonuje się w migracji SQL; utrzymuj zgodność komunikatu w `article-flow.js`. W razie potrzeby można cyklicznie usuwać wiersze limitów starsze niż 30 dni. Warto także ustawić alerty kosztów OpenAI i ochronę ruchu w Vercel; limity aplikacji nie dotyczą innych aplikacji używających tego samego klucza OpenAI.
 
 - Serwer potwierdza sesję w Supabase; nie ufa identyfikatorowi konta z przeglądarki. Awaria sprawdzania limitów blokuje wywołania, nie odblokowuje ich.
 - Tekst: 25–12 000 znaków. Żądanie JSON: maksymalnie 50 000 bajtów (poza wcześniejszym limitem platformy). URL: maksymalnie 2048 znaków.
@@ -61,3 +64,5 @@ Do pracy z prawdziwymi lokalnymi funkcjami Vercel użyj Vercel CLI (`vercel dev`
 Aplikacja obsługuje standardowy link Supabase (`{{ .ConfirmationURL }}`) oraz kod jednorazowy, jeśli szablon go zawiera. Nie trzeba zmieniać szablonu wiadomości. Po kliknięciu linku aplikacja usuwa tokeny z adresu, potwierdza konto przez Supabase i zapisuje sesję. Kontynuuj pracę w karcie otwartej przez link.
 
 W Supabase → Authentication → URL Configuration ustaw **Site URL** na adres aplikacji, a w **Redirect URLs** dodaj dokładny adres używanego wdrożenia Vercel z końcowym `/#Main` (np. `https://twoja-wersja.vercel.app/#Main`). Dla kolejnego adresu Preview trzeba dodać jego adres. Aplikacja wysyła `redirect_to` wskazujący aktualne wdrożenie. Jeżeli adres nie jest dozwolony, Supabase może wrócić do Site URL, gdzie również musi być wdrożona obsługa linków. Stare lub już użyte linki mogą wygasnąć; po zmianie ustawień poproś o nową wiadomość. Nie udostępniaj linków logowania, bo zawierają jednorazowe dane dostępu.
+
+Sesja gościa jest zachowywana w tej przeglądarce, również po odświeżeniu i odnowieniu tokenu. Postępy gościa pozostają lokalnie; po zalogowaniu mogą zostać zsynchronizowane z kontem. Limit 2 analiz dotyczy sesji gościnnej w Supabase — usunięcie danych przeglądarki pozwala utworzyć nową tożsamość. Nadal obowiązują limity tworzenia anonimowych kont Supabase i wspólny limit 100 analiz dziennie. Nie próbujemy identyfikować urządzenia przez fingerprinting.

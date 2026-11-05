@@ -66,8 +66,18 @@ test('auth/quotas fail closed on missing config, invalid user, denial, outage or
   for (const [quota, code] of [[false, 429], [null, 503], [[], 503]]) {
     await assert.rejects(() => authorize(req(), 'analyze', { env, fetcher: async url => ({ ok: true, json: async () => url.endsWith('/user') ? user : quota }) }), { status: code });
   }
-  for (const badUser of [{ ...user, is_anonymous: true }, { ...user, email_confirmed_at: null }, { id: 'fake' }]) {
+  for (const badUser of [{ ...user, email_confirmed_at: null }, { id: 'fake' }]) {
     await assert.rejects(() => authorize(req(), 'article', { env, fetcher: async () => ({ ok: true, json: async () => badUser }) }), { status: 401 });
   }
   await assert.rejects(() => authorize(req(), 'article', { env, fetcher: async () => { throw new Error('network'); } }), { status: 503 });
+});
+
+test('verified anonymous sessions can consume guest quota; client-supplied identity is ignored', async () => {
+  const seen = [];
+  await authorize(req({ text, user_id: 'forged', anonymous: false }), 'analyze', { env, fetcher: async (url, options) => {
+    seen.push({ url, options });
+    return { ok: true, json: async () => url.endsWith('/user') ? { ...user, email_confirmed_at: null, is_anonymous: true } : true };
+  } });
+  assert.match(seen[1].url, /consume_analysis_quota_v2$/);
+  assert.equal(JSON.parse(seen[1].options.body).p_user, user.id);
 });

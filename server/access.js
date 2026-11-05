@@ -19,12 +19,12 @@ export async function authorize(req, kind, { fetcher = fetch, env = process.env 
   if (userResponse.status === 401 || userResponse.status === 403) throw new HttpError(401, 'Sesja wygasła. Zaloguj się ponownie.');
   if (!userResponse.ok) throw new HttpError(503, 'Nie udało się sprawdzić konta.');
   const user = await userResponse.json();
-  if (!/^[0-9a-f-]{36}$/i.test(user.id || '') || !user.email_confirmed_at || user.is_anonymous) {
+  if (!/^[0-9a-f-]{36}$/i.test(user.id || '') || (user.is_anonymous !== true && !user.email_confirmed_at)) {
     throw new HttpError(401, 'Zaloguj się na potwierdzone konto e-mail.');
   }
   let quota;
   try {
-    quota = await fetcher(url + '/rest/v1/rpc/consume_analysis_quota', {
+    quota = await fetcher(url + '/rest/v1/rpc/consume_analysis_quota_v2', {
       method: 'POST',
       headers: { apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_user: user.id, p_kind: kind }),
@@ -32,7 +32,9 @@ export async function authorize(req, kind, { fetcher = fetch, env = process.env 
     });
     if (!quota.ok) throw new Error();
     const allowed = await quota.json();
-    if (allowed === false) throw new HttpError(429, 'Osiągnięto limit lub analizujesz zbyt szybko. Odczekaj minutę; limit dzienny odnawia się o północy UTC.');
+    if (allowed === false) throw new HttpError(429, user.is_anonymous === true && kind === 'analyze'
+      ? 'Limit gościa: 2 analizy AI dziennie. Jeśli dopiero analizowano, odczekaj minutę. Zaloguj się, aby uzyskać 5 analiz dziennie. Limity odnawiają się o północy UTC; obowiązuje też wspólny limit aplikacji.'
+      : 'Osiągnięto limit lub analizujesz zbyt szybko. Odczekaj minutę; limit dzienny odnawia się o północy UTC.');
     if (allowed !== true) throw new Error();
   } catch (error) {
     if (error instanceof HttpError) throw error;

@@ -26,10 +26,10 @@ async function finishAuthReturn() {
     // Verify the token with Supabase; never trust user identity from URL parameters.
     const user = await sbReq('/auth/v1/user', { token: access });
     if (!user || typeof user.id !== 'string' || !user.id || !user.email_confirmed_at) throw new Error('invalid');
-    sbStore({ at: access, rt: refresh, exp: Date.now() + Math.min(expires, 86400) * 1000, uid: user.id, email: user.email || '' });
+    sbStore({ at: access, rt: refresh, exp: Date.now() + Math.min(expires, 86400) * 1000, uid: user.id, email: user.email || '', anonymous: false });
     showToast('Zalogowano przez link z e-maila.');
     await syncNow();
-    if (current === 'Settings') render(current);
+    if (current === 'Settings' || current === 'Main') render(current);
   } catch (_) {
     showToast('Nie udało się potwierdzić logowania. Poproś o nową wiadomość w Ustawieniach → Konto.');
   }

@@ -7,7 +7,7 @@ function materialText(raw) {
   return text;
 }
 async function materialRequest(path, body) {
-  const token = await sbToken();
+  const token = await ensureGuestSession();
   if (!token) throw new Error('Zaloguj się w Ustawieniach, aby pobrać artykuł lub użyć analizy AI.');
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 28000);
@@ -17,7 +17,7 @@ async function materialRequest(path, body) {
       body: JSON.stringify(body), signal: controller.signal
     });
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Nie udało się wykonać operacji. Spróbuj ponownie.');
+    if (!response.ok) { const error = new Error(data.error || 'Nie udało się wykonać operacji. Spróbuj ponownie.'); error.status = response.status; throw error; }
     return data;
   } catch (error) {
     if (error.name === 'AbortError') throw new Error('Przekroczono czas oczekiwania. Spróbuj ponownie lub wklej tekst ręcznie.');
@@ -56,17 +56,19 @@ function previewMaterial(data) {
     '<textarea id="article-preview" maxlength="12000" rows="10" style="width:100%;box-sizing:border-box;margin-top:8px;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.07);color:#E8F6F8;font:500 15px/22px Manrope,system-ui,sans-serif;resize:vertical"></textarea>' +
     '<p id="article-count" style="font-size:12px"></p><div id="article-error" role="status" aria-live="polite" style="color:#FFB0A4"></div>' +
     '<button id="article-confirm" type="button" style="'+MB+';width:100%;border:0;background:#5EE6D6;color:#04202B">Zatwierdź i analizuj AI</button>' +
+    '<button id="article-login" type="button" style="'+MB+';width:100%;margin-top:8px;border:0;background:transparent;color:#7FF0E0">Zaloguj się / Utwórz konto</button>' +
     '<button id="article-cancel" type="button" style="'+MB+';width:100%;margin-top:8px;border:1px solid rgba(255,255,255,.28);background:transparent;color:#E8F6F8">Anuluj</button>', (card, dismiss) => {
       card.setAttribute('aria-labelledby', 'article-preview-title');
       const field = card.querySelector('#article-preview');
       const error = card.querySelector('#article-error');
       const confirm = card.querySelector('#article-confirm');
       card.querySelector('#article-source').textContent = data.title + '\n' + data.url;
-      card.querySelector('#article-note').textContent = (data.truncated ? 'Artykuł skrócono do 12 000 znaków. ' : '') + 'Sprawdź, czy tekst zawiera właściwy artykuł. Pobranie jest bezpłatne; analiza AI korzysta z limitu Twojego konta (5 dziennie).';
+      card.querySelector('#article-note').textContent = (data.truncated ? 'Artykuł skrócono do 12 000 znaków. ' : '') + 'Sprawdź, czy tekst zawiera właściwy artykuł. Pobranie nie zużywa analizy AI. Limit: ' + (isGuestSession() ? 'gość — 2 analizy AI dziennie.' : 'konto — 5 analiz AI dziennie.');
       field.value = data.text;
       const count = () => { card.querySelector('#article-count').textContent = field.value.length + ' / 12 000 znaków'; };
       field.addEventListener('input', count); count();
       let cancelled = false;
+      card.querySelector('#article-login').onclick = () => { cancelled = true; dismiss(); openAccount(); };
       card.querySelector('#article-cancel').onclick = () => { cancelled = true; dismiss(); };
       confirm.onclick = async () => {
         if (confirm.disabled) return;
