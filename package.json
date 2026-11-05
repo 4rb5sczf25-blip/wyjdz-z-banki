@@ -1,0 +1,8 @@
+JSON
+{
+  "name": "wyjdz-z-banki",
+  "version": "1.0.0",
+  "dependencies": {
+    "openai": "^4.20.0"
+  }
+}
