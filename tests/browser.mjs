@@ -1,3 +1,4 @@
+import '../analysis-method.js';
 // Real Chromium UI, entirely local HTTP fixtures. No OpenAI/Supabase network calls.
 import assert from 'node:assert/strict';
 import http from 'node:http';
@@ -30,10 +31,10 @@ const server = http.createServer(async (req, res) => {
       }
       res.end(JSON.stringify(req.url === '/api/article'
         ? { title: '<img onerror="window.injected=true">', url: body.url, text: articleText, truncated: true }
-        : { s: [['fact', body.text.slice(0, 100)]], head: 'Wynik testowy', pct: 3, ai: true }));
+        : { ...globalThis.AnalysisMethod.analyzeLocal(body.text,body.title), ai: true }));
       return;
     }
-    const files = { '/': 'index.html', '/article-flow.js': 'article-flow.js', '/auth-return.js': 'auth-return.js', '/guest-session.js': 'guest-session.js', '/quota-view.js': 'quota-view.js', '/profile.js': 'profile.js', '/privacy-config.js': 'privacy-config.js', '/privacy.js': 'privacy.js', '/transparency.js': 'transparency.js', '/visual-polish.js': 'visual-polish.js', '/visual-polish.css': 'visual-polish.css', '/logo.jpg': 'logo.jpg', '/favicon.png': 'favicon.png', '/manifest.webmanifest': 'manifest.webmanifest' };
+    const files = { '/': 'index.html', '/article-flow.js': 'article-flow.js', '/auth-return.js': 'auth-return.js', '/guest-session.js': 'guest-session.js', '/quota-view.js': 'quota-view.js', '/profile.js': 'profile.js', '/privacy-config.js': 'privacy-config.js', '/privacy.js': 'privacy.js', '/transparency.js': 'transparency.js', '/visual-polish.js': 'visual-polish.js', '/visual-polish.css': 'visual-polish.css', '/analysis-method.js': 'analysis-method.js', '/analysis-details.js': 'analysis-details.js', '/analysis-details.css': 'analysis-details.css', '/logo.jpg': 'logo.jpg', '/favicon.png': 'favicon.png', '/manifest.webmanifest': 'manifest.webmanifest' };
     const file = files[req.url];
     if (!file) { res.statusCode = 404; res.end(); return; }
     res.setHeader('Content-Type', file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.html') ? 'text/html; charset=utf-8' : file.endsWith('.jpg') ? 'image/jpeg' : 'application/octet-stream');
@@ -97,14 +98,14 @@ if(String(input).includes('.supabase.co/auth/v1/signup')){window.guestSignups++;
   await evaluate(`document.getElementById('article-preview').value=${JSON.stringify(edited)};document.getElementById('article-confirm').click();document.getElementById('article-confirm').click()`);
   await waitFor(`location.hash === '#Article'`);
   assert.equal(await evaluate(`document.getElementById('analysis-mode').textContent`),'Analiza AI');
-  assert.match(await evaluate(`document.querySelector('[aria-label="Sposób analizy"]').textContent`),/nie potwierdza jego prawdziwości/);
+  assert.match(await evaluate(`document.querySelector('[aria-label="Sposób analizy"]').textContent`),/nie potwierdza prawdziwości informacji/);
   await evaluate(`document.getElementById('source-details').click()`);
   assert.equal(await evaluate(`document.getElementById('source-original').href`),'https://example.com/article');
   assert.match(await evaluate(`document.querySelector('[aria-labelledby="source-details-title"]').textContent`),/Brak danych/);
   assert.equal(await evaluate(`Boolean(window.injected)`),false);
   await evaluate(`document.querySelector('[aria-labelledby="source-details-title"] [data-close]').click();document.querySelector('[aria-label="Jak działa nasza analiza?"]').click()`);
-  assert.match(await evaluate(`document.querySelector('[aria-labelledby="analysis-help-title"]').textContent`),/0,35/);
-  assert.match(await evaluate(`document.querySelector('[aria-labelledby="analysis-help-title"]').textContent`),/nie prawdopodobieństwo fałszu/);
+  assert.match(await evaluate(`document.querySelector('[aria-labelledby="analysis-help-title"]').textContent`),/Trzy niezależne wymiary/);
+  assert.match(await evaluate(`document.querySelector('[aria-labelledby="analysis-help-title"]').textContent`),/Nie obliczamy wyniku manipulacji/);
   await evaluate(`document.querySelector('[aria-labelledby="analysis-help-title"] [data-close]').click()`);
   console.log('PASS real source link and missing metadata, escaped text, disclosed score method');
   assert.equal(calls.length, 2); assert.equal(calls[1].path, '/api/analyze'); assert.equal(calls[1].body.text, edited);
@@ -188,7 +189,7 @@ if(String(input).includes('.supabase.co/auth/v1/signup')){window.guestSignups++;
   assert.match(await evaluate(`document.querySelector('[aria-labelledby="source-details-title"]').innerText`),/postać fikcyjna/);
   assert.equal(await evaluate(`Boolean(document.getElementById('source-original'))`),false);
   await evaluate(`document.querySelector('[aria-labelledby="source-details-title"] [data-close]').click();document.querySelector('[aria-label="Jak działa nasza analiza?"]').click()`);
-  assert.match(await evaluate(`document.querySelector('[aria-labelledby="analysis-help-title"]').innerText`),/procenty ustawiono ręcznie/);
+  assert.match(await evaluate(`document.querySelector('[aria-labelledby="analysis-help-title"]').innerText`),/ręcznie ustawioną częścią starszej makiety/);
   console.log('PASS comparison rationale and fictional metadata clearly labeled; demo URLs not clickable');
   await command('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
   await evaluate(`document.querySelectorAll('.ob-back').forEach(e=>e.remove());visualEntries.clear();setPref('motion',true);select({ev:0,src:null,from:'Compare'});show('Compare')`);
@@ -214,8 +215,17 @@ if(String(input).includes('.supabase.co/auth/v1/signup')){window.guestSignups++;
   assert.doesNotMatch(await evaluate(`document.querySelector('.analyze-btn').textContent`),/%/);
   await evaluate(`window.restoreBusy()`);
   console.log('PASS cards/map animate once, result bar animates, motion toggle cancels effects, reduced motion shows static wave');
+  await evaluate(`document.querySelectorAll('.ob-back').forEach(e=>e.remove());setPref('motion',false);show('Main');showMaterialAnalysis(AnalysisMethod.analyzeLocal('Za tą kompromitującą ustawą zagłosowało aż 231 posłów. Projekt trafił do komisji.'),'Za tą kompromitującą ustawą zagłosowało aż 231 posłów. Projekt trafił do komisji.')`);
+  await waitFor(`location.hash==='#Article' && Boolean(document.getElementById('emotion-summary'))`);
+  const summaryText=await evaluate(`document.getElementById('emotion-summary').innerText`);
+  assert.match(summaryText,/1 z 2 fragmentów/);assert.match(summaryText,/silne/);await evaluate(`document.querySelector('#emotion-summary details summary').click()`);assert.match(await evaluate(`document.getElementById('emotion-summary').innerText`),/Twierdzenia sprawdzalne: 2/);
+  assert.ok(await evaluate(`analysisRows(curArticle())[0].checkable && analysisRows(curArticle())[0].opinion && analysisRows(curArticle())[0].emotion===3`));
+  assert.equal(await evaluate(`getComputedStyle(stage.firstElementChild.querySelectorAll('.mark')[1]).backgroundColor`),'rgba(0, 0, 0, 0)');
+  await evaluate(`stage.firstElementChild.querySelector('.mark').click()`);
+  assert.match(await evaluate(`document.getElementById('mark-tip-body').innerText`),/Wskazany fragment/);
+  console.log('PASS overlapping labels, strong emotion despite neutral scaffolding, neutral claim styling and grounded explanation');
   assert.equal(exceptions.length, 0, JSON.stringify(exceptions));
-  console.log('15 browser scenarios passed; no real OpenAI or Supabase requests.');
+  console.log('16 browser scenarios passed; no real OpenAI or Supabase requests.');
 } finally {
   socket?.close(); browser.kill('SIGTERM');
   await new Promise(resolve => { if (browser.exitCode !== null) resolve(); else browser.once('exit', resolve); });

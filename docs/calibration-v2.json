@@ -1,0 +1,270 @@
+{
+  "status": "Robocze oceny do niezależnego przeglądu przez ludzi; nie wyniki AI ani wzorzec naukowy. Wszystkie przykłady fikcyjne.",
+  "humanReviewComplete": false,
+  "cases": [
+    {
+      "id": "neutral_vote",
+      "text": "Za ustawą zagłosowało 231 posłów.",
+      "kind": "body",
+      "draftExpected": {
+        "checkable": true,
+        "opinion": false,
+        "emotion": 0,
+        "voice": "none"
+      }
+    },
+    {
+      "id": "neutral_committee",
+      "text": "Projekt trafił do komisji.",
+      "kind": "body",
+      "draftExpected": {
+        "checkable": true,
+        "opinion": false,
+        "emotion": 0,
+        "voice": "none"
+      }
+    },
+    {
+      "id": "neutral_date",
+      "text": "Posiedzenie odbędzie się 12 listopada.",
+      "kind": "body",
+      "draftExpected": {
+        "checkable": true,
+        "opinion": false,
+        "emotion": 0,
+        "voice": "none"
+      }
+    },
+    {
+      "id": "negative_event",
+      "text": "W pożarze zginęły trzy osoby.",
+      "kind": "body",
+      "draftExpected": {
+        "checkable": true,
+        "opinion": false,
+        "emotion": 0,
+        "voice": "none"
+      }
+    },
+    {
+      "id": "negative_disaster",
+      "text": "W katastrofie zginęły trzy osoby.",
+      "kind": "body",
+      "draftExpected": {
+        "checkable": true,
+        "opinion": false,
+        "emotion": 0,
+        "voice": "none"
+      }
+    },
+    {
+      "id": "negative_statistics",
+      "text": "Liczba wypadków wzrosła o 5 procent.",
+      "kind": "body",
+      "draftExpected": {
+        "checkable": true,
+        "opinion": false,
+        "emotion": 0,
+        "voice": "none"
+      }
+    },
+    {
+      "id": "opinion",
+      "text": "Moim zdaniem to dobre rozwiązanie.",
+      "kind": "body",
+      "draftExpected": {
+        "checkable": false,
+        "opinion": true,
+        "emotion": 0,
+        "voice": "none"
+      }
+    },
+    {
+      "id": "forecast",
+      "text": "Ta zmiana prawdopodobnie zwiększy koszty.",
+      "kind": "body",
+      "draftExpected": {
+        "checkable": false,
+        "opinion": true,
+        "emotion": 0,
+        "voice": "none"
+      }
+    },
+    {
+      "id": "recommendation",
+      "text": "Należy rozważyć inne rozwiązanie.",
+      "kind": "body",
+      "draftExpected": {
+        "checkable": false,
+        "opinion": true,
+        "emotion": 0,
+        "voice": "none"
+      }
+    },
+    {
+      "id": "mild_concern",
+      "text": "Ta propozycja budzi pewien niepokój.",
+      "kind": "body",
+      "draftExpected": {
+        "checkable": false,
+        "opinion": true,
+        "emotion": 1,
+        "voice": "author"
+      }
+    },
+    {
+      "id": "mild_surprise",
+      "text": "Zaskakujące, że komisja zmieniła termin.",
+      "kind": "body",
+      "draftExpected": {
+        "checkable": true,
+        "opinion": true,
+        "emotion": 1,
+        "voice": "author"
+      }
+    },
+    {
+      "id": "strong_scandal",
+      "text": "To skandal i kompromitacja władz!",
+      "kind": "body",
+      "draftExpected": {
+        "checkable": false,
+        "opinion": true,
+        "emotion": 3,
+        "voice": "author"
+      }
+    },
+    {
+      "id": "mixed_vote",
+      "text": "Za tą kompromitującą ustawą zagłosowało aż 231 posłów.",
+      "kind": "body",
+      "draftExpected": {
+        "checkable": true,
+        "opinion": true,
+        "emotion": 3,
+        "voice": "author"
+      }
+    },
+    {
+      "id": "mixed_budget",
+      "text": "Władze bezwstydnie wyrzuciły kolejne 2 miliony w błoto.",
+      "kind": "body",
+      "draftExpected": {
+        "checkable": true,
+        "opinion": true,
+        "emotion": 3,
+        "voice": "author"
+      }
+    },
+    {
+      "id": "quoted_scandal",
+      "text": "Radny powiedział: „To skandal i kompromitacja”.",
+      "kind": "body",
+      "draftExpected": {
+        "checkable": true,
+        "opinion": true,
+        "emotion": 3,
+        "voice": "quoted"
+      }
+    },
+    {
+      "id": "quoted_criticism",
+      "text": "Według rzeczniczki projekt jest „absurdalnym pomysłem”.",
+      "kind": "body",
+      "draftExpected": {
+        "checkable": true,
+        "opinion": true,
+        "emotion": 2,
+        "voice": "quoted"
+      }
+    },
+    {
+      "id": "attribution_uncertain",
+      "text": "„To kompromitacja” — bez wskazania autora wypowiedzi.",
+      "kind": "body",
+      "draftExpected": {
+        "checkable": false,
+        "opinion": true,
+        "emotion": 3,
+        "voice": "uncertain"
+      }
+    },
+    {
+      "id": "irony",
+      "text": "No tak, kolejny genialny sukces urzędu.",
+      "kind": "body",
+      "draftExpected": {
+        "checkable": false,
+        "opinion": true,
+        "emotion": 2,
+        "voice": "author"
+      }
+    },
+    {
+      "id": "sarcasm_with_fact",
+      "text": "Po miesiącu opóźnienia urząd znów popisał się punktualnością.",
+      "kind": "body",
+      "draftExpected": {
+        "checkable": true,
+        "opinion": true,
+        "emotion": 2,
+        "voice": "author"
+      }
+    },
+    {
+      "id": "neutral_quote",
+      "text": "Rzeczniczka powiedziała: „Posiedzenie rozpocznie się o 12”.",
+      "kind": "body",
+      "draftExpected": {
+        "checkable": true,
+        "opinion": false,
+        "emotion": 0,
+        "voice": "none"
+      }
+    },
+    {
+      "id": "acronyms",
+      "text": "SEJM przyjął projekt dotyczący finansowania NATO.",
+      "kind": "body",
+      "draftExpected": {
+        "checkable": true,
+        "opinion": false,
+        "emotion": 0,
+        "voice": "none"
+      }
+    },
+    {
+      "id": "rhetorical_question",
+      "text": "Jak długo jeszcze będziemy tolerować ten absurd?",
+      "kind": "body",
+      "draftExpected": {
+        "checkable": false,
+        "opinion": true,
+        "emotion": 2,
+        "voice": "author"
+      }
+    },
+    {
+      "id": "title_strong",
+      "text": "SKANDAL! Władze znów upokorzyły mieszkańców",
+      "kind": "title",
+      "draftExpected": {
+        "checkable": false,
+        "opinion": true,
+        "emotion": 3,
+        "voice": "author"
+      }
+    },
+    {
+      "id": "title_neutral",
+      "text": "Komisja przyjęła projekt zmian w transporcie",
+      "kind": "title",
+      "draftExpected": {
+        "checkable": true,
+        "opinion": false,
+        "emotion": 0,
+        "voice": "none"
+      }
+    }
+  ]
+}

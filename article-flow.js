@@ -25,8 +25,12 @@ async function materialRequest(path, body) {
   } finally { clearTimeout(timer); refreshAnalysisQuota(); }
 }
 function validMaterialAnalysis(d) {
-  return d && Array.isArray(d.s) && d.s.length > 0 && d.s.length <= 12 &&
-    d.s.every(x => Array.isArray(x) && ['fact', 'opinion', 'emotion'].includes(x[0]) && typeof x[1] === 'string' && x[1].length > 0 && x[1].length <= 300);
+  try {
+    if (d?.analysisVersion !== 2 || !Array.isArray(d.sample?.units) || d.sample.units.length < 1 || d.sample.units.length > 12) return false;
+    const rows = AnalysisMethod.validateRows({ sentences: d.rows }, d.sample);
+    const body = rows.filter(row => row.kind === 'body');
+    return body.length > 0 && Array.isArray(d.s) && d.s.length === body.length && body.every((row, index) => d.s[index]?.[1] === row.text);
+  } catch (_) { return false; }
 }
 function showMaterialAnalysis(result, text, source) {
   if (current !== 'Main') return;
@@ -36,7 +40,7 @@ function showMaterialAnalysis(result, text, source) {
     id: 'me', name: result.ai ? 'Analiza AI' : 'Analiza lokalna', lean: 'C',
     pct: Math.max(0, Math.min(100, Math.round(Number(result.pct) || 0))),
     head: String(result.head || result.s[0][1]).slice(0, 140),
-    s: result.s, raw: text, ai: Boolean(result.ai), source: sourceURL || null, sourceMetadata
+    analysisVersion: result.analysisVersion, rows: result.rows, sample: result.sample, summary: result.summary, s: result.s, raw: text, ai: Boolean(result.ai), source: sourceURL || null, sourceMetadata
   };
   setCustomArticle(article);
   select({ ev: CUSTOM_EV, src: 'me', from: 'Main' });
@@ -84,7 +88,7 @@ function previewMaterial(data) {
         const restore = materialBusy(confirm, 'Analizujemy język tekstu…');
         field.disabled = true;
         try {
-          const result = await materialRequest('/api/analyze', { text });
+          const result = await materialRequest('/api/analyze', { text, title: data.title });
           if (!validMaterialAnalysis(result)) throw new Error('Otrzymano niepoprawną analizę. Spróbuj ponownie.');
           // Closing the dialog or leaving the screen discards late responses.
           if (cancelled || card.dataset.closed || !card.isConnected || current !== 'Main') return;

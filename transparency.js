@@ -9,6 +9,8 @@ function attachDemoMetadata(events) {
     event.demo = true;
     event.articles.forEach((article, index) => {
       article.demo = true;
+      const demoResult = AnalysisMethod.analyzeLocal(article.s.map(row => row[1]).join(' '));
+      Object.assign(article, { analysisVersion: 2, rows: demoResult.rows, sample: demoResult.sample, summary: demoResult.summary, s: demoResult.s });
       article.sourceMetadata = {
         title: article.head.replace(/\[\/?[eo]\]/g, ''), author: authors[index % authors.length],
         publishedAt: '2026-11-03T' + String(8 + index).padStart(2, '0') + ':00:00+01:00',
@@ -62,6 +64,6 @@ function openSourceDetails() {
     '<p><strong>Publikacja:</strong> ' + esc(sourceDate(meta.publishedAt)) + (demo ? ' (data fikcyjna)' : '') + '</p>' +
     (url ? '<p style="overflow-wrap:anywhere">' + esc(url) + '</p>' : '') +
     (!demo && url ? '<a id="source-original" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer" style="display:block;color:#7FF0E0;padding:10px 0">Otwórz oryginał ↗</a><p style="font-size:12px">Metadane pochodzą ze strony wydawcy i nie zostały niezależnie zweryfikowane.</p>' : demo ? '<p>Adres w zarezerwowanej domenie .example nie prowadzi do prawdziwego artykułu.</p>' : '<p>Nie znamy adresu oryginału — nie tworzymy go automatycznie.</p>') +
-    '<h3>Zakres analizy</h3><p>' + esc(scope) + '</p><p>Klasyfikacja obejmuje maksymalnie 12 wybranych zdań. Wynik może nie odzwierciedlać całej publikacji.</p>' +
+    '<h3>Zakres analizy</h3><p>' + esc(scope) + '</p><p>Klasyfikacja obejmuje maksymalnie 12 fragmentów (zdań lub części dłuższych zdań), wybranych równomiernie. Tytuł, jeśli jest dostępny, oceniamy osobno. Wynik może nie odzwierciedlać całej publikacji.</p>' +
     '<button type="button" data-close style="'+MB+';width:100%;border:0;background:#5EE6D6;color:#04202B">Zamknij</button>', card => card.setAttribute('aria-labelledby', 'source-details-title'));
 }

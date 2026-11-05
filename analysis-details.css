@@ -1,0 +1,13 @@
+.analysis-unit{margin:0 0 18px;overflow-wrap:anywhere}
+.analysis-unit:last-child{margin-bottom:0}
+.analysis-position{display:block;margin-bottom:6px;font-size:11px;line-height:16px;color:#A9CBD4;font-weight:600}
+.analysis-flags{display:block;margin-top:7px;font-size:11px;line-height:17px;color:#CFE6EC}
+.mark-fact{background:transparent!important;border-bottom:0!important}
+.analysis-summary-v2{padding:16px;border:1px solid rgba(94,230,214,.25);border-radius:20px;background:rgba(255,255,255,.05)}
+.analysis-summary-v2 h3{font-size:17px;line-height:24px;margin:0 0 8px;color:#E8F6F8}
+.analysis-summary-v2 p{font-size:13px;line-height:20px;margin:10px 0 0;color:#CFE6EC}
+.analysis-peak{display:block;font-size:16px;line-height:24px;font-weight:800;color:#FFB0A4}
+.analysis-title{padding:12px 14px;border-left:2px solid #A9CBD4;background:rgba(255,255,255,.035);border-radius:4px 14px 14px 4px;font-size:14px;line-height:22px}
+.analysis-title p{margin:6px 0 0;font-size:12px;line-height:18px;color:#A9CBD4}
+
+[aria-label="Filtr oznaczeń w tekście"] button{background:rgba(207,230,236,.06)}
