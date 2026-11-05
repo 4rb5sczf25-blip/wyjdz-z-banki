@@ -1,6 +1,6 @@
 # Wersja komputerowa — wygodniejsza przestrzeń pracy
 
-Gałąź `feat/desktop-workspace`, przygotowana na bazie opublikowanej Beta 0.80. Zmiany nie są połączone z `main`. Nie zmieniają zapytań AI, limitów, Supabase ani ustawień kont.
+Gałąź `feat/desktop-workspace`, przygotowana na bazie opublikowanej Beta 0.80. Operator zatwierdził publikację zmian przez `main` jako **Beta 0.81**. Zakończenie wdrożenia należy sprawdzić w Vercel. Nie zmieniają zapytań AI, limitów, Supabase ani ustawień kont.
 
 ## Zmiany dla użytkownika
 
