@@ -88,3 +88,9 @@ Przycisk „Dlaczego te artykuły?” wyjaśnia wspólny temat, ręczny dobór i
 „Źródło i oryginał” przy wyniku pokazuje metadane, adres oraz zakres analizy. Dla rzeczywistych linków ekstraktor odczytuje autora i datę publikacji ze strony, jeśli są dostępne; nie uzupełnia braków fikcyjnymi danymi. Informuje o skróceniu do 12 000 znaków, możliwości edycji podglądu i analizie maksymalnie 12 zdań. Przycisk otwarcia oryginału prowadzi do rzeczywistego adresu; demonstracyjne adresy są nieaktywne.
 
 Pop-up metodologii ujawnia wzór nowych analiz: `100 × (emocje + 0,35 × opinie) / liczba zdań`, po zaokrągleniu ograniczony do 3–97%. To umowny wskaźnik języka, nie ocena wiarygodności ani prawdopodobieństwo fałszu. Procenty dotychczasowej makiety pozostają wartościami ustawionymi ręcznie i są tak opisane. Instrukcja modelu wymaga jednakowych kryteriów niezależnie od wydawcy i poglądów; aplikacja nie deklaruje, że AI jest wolna od stronniczości. Użytkownik może zgłosić błędne zestawienie i nieprawidłowe źródło.
+
+## Wygląd i animacje
+
+Efekty są w visual-polish.css i visual-polish.js. Karty pojawiają się przy wejściu w widok (dopiero po wejściu w obszar przewijania), a powrót do tego samego zestawu w danej sesji strony nie odtwarza ich ponownie. Mapa łagodnie wprowadza źródła i wyróżnia wybór. Nowy wynik ma jednoczesną animację segmentów paska. Oczekiwanie na analizę pokazuje falę i opis czynności, bez symulowanego procentu ukończenia.
+
+Pop-upy zachowują przewijanie i odstępy, z krótkim wysunięciem i płynnym zamknięciem. Efekty respektują ustawienie Animacje oraz systemowe prefers-reduced-motion. Wyłączenie animacji zatrzymuje nowe efekty WAAPI i odsłania oczekujące karty, zamiast zostawiać je niewidoczne. Testy przeglądarkowe sprawdzają jednorazowe animacje, anulowanie ruchu i statyczny wskaźnik przy ograniczeniu ruchu; nie wywołują OpenAI.

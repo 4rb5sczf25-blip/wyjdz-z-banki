@@ -33,10 +33,10 @@ const server = http.createServer(async (req, res) => {
         : { s: [['fact', body.text.slice(0, 100)]], head: 'Wynik testowy', pct: 3, ai: true }));
       return;
     }
-    const files = { '/': 'index.html', '/article-flow.js': 'article-flow.js', '/auth-return.js': 'auth-return.js', '/guest-session.js': 'guest-session.js', '/quota-view.js': 'quota-view.js', '/profile.js': 'profile.js', '/privacy-config.js': 'privacy-config.js', '/privacy.js': 'privacy.js', '/transparency.js': 'transparency.js', '/logo.jpg': 'logo.jpg', '/favicon.png': 'favicon.png', '/manifest.webmanifest': 'manifest.webmanifest' };
+    const files = { '/': 'index.html', '/article-flow.js': 'article-flow.js', '/auth-return.js': 'auth-return.js', '/guest-session.js': 'guest-session.js', '/quota-view.js': 'quota-view.js', '/profile.js': 'profile.js', '/privacy-config.js': 'privacy-config.js', '/privacy.js': 'privacy.js', '/transparency.js': 'transparency.js', '/visual-polish.js': 'visual-polish.js', '/visual-polish.css': 'visual-polish.css', '/logo.jpg': 'logo.jpg', '/favicon.png': 'favicon.png', '/manifest.webmanifest': 'manifest.webmanifest' };
     const file = files[req.url];
     if (!file) { res.statusCode = 404; res.end(); return; }
-    res.setHeader('Content-Type', file.endsWith('.js') ? 'text/javascript' : file.endsWith('.html') ? 'text/html; charset=utf-8' : file.endsWith('.jpg') ? 'image/jpeg' : 'application/octet-stream');
+    res.setHeader('Content-Type', file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.html') ? 'text/html; charset=utf-8' : file.endsWith('.jpg') ? 'image/jpeg' : 'application/octet-stream');
     res.end(await readFile(new URL(file, root)));
   } catch { res.statusCode = 500; res.end(); }
 });
@@ -190,8 +190,32 @@ if(String(input).includes('.supabase.co/auth/v1/signup')){window.guestSignups++;
   await evaluate(`document.querySelector('[aria-labelledby="source-details-title"] [data-close]').click();document.querySelector('[aria-label="Jak działa nasza analiza?"]').click()`);
   assert.match(await evaluate(`document.querySelector('[aria-labelledby="analysis-help-title"]').innerText`),/procenty ustawiono ręcznie/);
   console.log('PASS comparison rationale and fictional metadata clearly labeled; demo URLs not clickable');
+  await command('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
+  await evaluate(`document.querySelectorAll('.ob-back').forEach(e=>e.remove());visualEntries.clear();setPref('motion',true);select({ev:0,src:null,from:'Compare'});show('Compare')`);
+  assert.ok(await evaluate(`stage.firstElementChild.querySelector('.map-point').getAnimations().length>0`));
+  await delay(650);
+  await evaluate(`show('Compare')`);
+  assert.equal(await evaluate(`stage.firstElementChild.querySelector('.map-point').getAnimations().length`),0);
+  assert.equal(await evaluate(`stage.firstElementChild.querySelectorAll('.reveal-pending').length`),0);
+  await evaluate(`select({src:'ds',from:'Compare'});show('Article')`);
+  assert.ok(await evaluate(`stage.firstElementChild.querySelector('.result-distribution').getAnimations().length>0`));
+  await evaluate(`document.getElementById('source-details').click();setPref('motion',false)`);
+  assert.equal(await evaluate(`visualAnimations.size`),0);
+  assert.equal(await evaluate(`pendingCards.size`),0);
+  await evaluate(`document.querySelector('.app-modal [data-close]').click()`);
+  assert.equal(await evaluate(`Boolean(document.querySelector('.app-modal'))`),false);
+  await command('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
+  await evaluate(`setPref('motion',true);show('Compare')`);
+  assert.equal(await evaluate(`motionOK()`),false);
+  assert.equal(await evaluate(`stage.firstElementChild.querySelector('.map-point').getAnimations().length`),0);
+  await evaluate(`show('Main');window.restoreBusy=materialBusy(document.querySelector('.analyze-btn'),'Analizujemy język tekstu…')`);
+  assert.equal(await evaluate(`getComputedStyle(document.querySelector('.busy-wave svg')).animationName`),'none');
+  assert.match(await evaluate(`document.querySelector('.analyze-btn').textContent`),/Analizujemy język tekstu/);
+  assert.doesNotMatch(await evaluate(`document.querySelector('.analyze-btn').textContent`),/%/);
+  await evaluate(`window.restoreBusy()`);
+  console.log('PASS cards/map animate once, result bar animates, motion toggle cancels effects, reduced motion shows static wave');
   assert.equal(exceptions.length, 0, JSON.stringify(exceptions));
-  console.log('14 browser scenarios passed; no real OpenAI or Supabase requests.');
+  console.log('15 browser scenarios passed; no real OpenAI or Supabase requests.');
 } finally {
   socket?.close(); browser.kill('SIGTERM');
   await new Promise(resolve => { if (browser.exitCode !== null) resolve(); else browser.once('exit', resolve); });

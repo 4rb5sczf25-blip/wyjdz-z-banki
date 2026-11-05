@@ -1,0 +1,28 @@
+/* Quiet depth, consistent typography and controls; semantic colors stay unchanged. */
+.app-screen{--surface:rgba(255,255,255,.065);--accent:#5EE6D6;--soft-text:#A9CBD4}
+.app-screen:not([data-screen="Splash"]) header h1{font-size:20px!important;line-height:26px!important;letter-spacing:-.35px}
+.app-screen h2{letter-spacing:-.25px}
+.story-card{background:linear-gradient(145deg,rgba(255,255,255,.085),rgba(255,255,255,.035))!important;transition:box-shadow .2s ease,background .2s ease,transform .18s ease;isolation:isolate}
+.story-card:focus-visible,.app-screen button:focus-visible,.app-screen a:focus-visible,.app-modal button:focus-visible{outline:2px solid #7FF0E0;outline-offset:3px}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){html:not(.no-motion) .story-card:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.2)}}
+.reveal-pending{opacity:0}
+#source-details,#comparison-why,#main-account{border-color:rgba(94,230,214,.24)!important;background:rgba(94,230,214,.055)!important}
+.analysis-method-note{border:0!important;border-left:2px solid rgba(94,230,214,.45)!important;border-radius:4px 14px 14px 4px!important;background:rgba(94,230,214,.035)!important}
+.result-distribution{transform-origin:left center;overflow:hidden;border-radius:999px;gap:3px!important;height:12px!important}
+.result-segment{min-width:0}
+.map-point{will-change:auto}
+.map-point::after{content:"";position:absolute;width:38px;height:38px;border-radius:50%;border:1px solid rgba(127,240,224,.65);opacity:0;pointer-events:none;transition:opacity .2s ease}
+.map-point[aria-pressed="true"]::after{opacity:1}
+.app-modal{box-shadow:0 -16px 54px rgba(0,0,0,.35);animation:modal-arrive .3s cubic-bezier(.22,.8,.24,1) both}
+.ob-back:has(.app-modal){animation:modal-backdrop .22s ease both}
+@keyframes modal-arrive{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes modal-backdrop{from{opacity:0}to{opacity:1}}
+.material-loading{display:inline-flex;align-items:center;justify-content:center;gap:10px;max-width:100%;line-height:22px}
+.material-loading-label{min-width:0;white-space:normal}
+.busy-wave{display:block;flex:none;width:28px;height:20px;overflow:hidden;opacity:.9}
+.busy-wave svg{display:block;width:56px;height:20px;animation:analysis-wave 1.15s linear infinite}
+@keyframes analysis-wave{from{transform:translateX(0)}to{transform:translateX(-28px)}}
+.analyze-btn.is-loading::after{display:none}
+.no-motion .reveal-pending{opacity:1}
+.no-motion .story-card:hover,.no-motion a:active,.no-motion button:active{transform:none!important}
+@media(prefers-reduced-motion:reduce){.reveal-pending{opacity:1}.story-card:hover,a:active,button:active{transform:none!important}.app-modal,.ob-back,.busy-wave svg{animation:none!important}}

@@ -48,7 +48,11 @@ function materialBusy(button, label) {
   button.disabled = true;
   button.setAttribute('aria-busy', 'true');
   button.classList.add('is-loading');
-  button.textContent = label;
+  const status = document.createElement('span'); status.className = 'material-loading';
+  const wave = document.createElement('span'); wave.className = 'busy-wave'; wave.setAttribute('aria-hidden', 'true');
+  wave.innerHTML = '<svg viewBox="0 0 56 20" fill="none"><path d="M0 10Q7 0 14 10T28 10T42 10T56 10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>';
+  const text = document.createElement('span'); text.className = 'material-loading-label'; text.setAttribute('role', 'status'); text.textContent = label;
+  status.append(wave, text); button.replaceChildren(status);
   return () => { button.disabled = false; button.removeAttribute('aria-busy'); button.classList.remove('is-loading'); button.innerHTML = original; };
 }
 function previewMaterial(data) {
@@ -77,7 +81,7 @@ function previewMaterial(data) {
         let text;
         try { text = materialText(field.value); } catch (e) { error.textContent = e.message; field.focus(); return; }
         error.textContent = '';
-        const restore = materialBusy(confirm, 'Analizuję tekst...');
+        const restore = materialBusy(confirm, 'Analizujemy język tekstu…');
         field.disabled = true;
         try {
           const result = await materialRequest('/api/analyze', { text });
@@ -105,7 +109,7 @@ async function analyzeOwnMaterial(event, say) {
     else if (raw.length > 2048) throw new Error('Link jest zbyt długi (maksymalnie 2048 znaków).');
   } catch (e) { say(e.message, false); return; }
   say('', true);
-  const restore = materialBusy(button, isURL ? 'Pobieram artykuł...' : 'Analizuję tekst...');
+  const restore = materialBusy(button, isURL ? 'Pobieram artykuł...' : 'Analizujemy język tekstu…');
   try {
     if (isURL) {
       const url = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
